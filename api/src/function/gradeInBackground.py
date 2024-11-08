@@ -1,4 +1,5 @@
 import json
+import sys
 import function.grader as grader
 from function.db import get_puredb
 
@@ -18,6 +19,7 @@ def gradeInBackground(Source, addfiles, filepath, QID, MaxScore, UID, LID, uploa
             data = [[0, 1]]
     
         print("grade result:", err, data)
+        sys.stdout.flush()
         
         s, m = 0, 0
     
@@ -50,6 +52,7 @@ def gradeInBackground(Source, addfiles, filepath, QID, MaxScore, UID, LID, uploa
         cursor.execute(upsert_query, (UID, LID, QID, filepath, Score, upload_time, CSYID, OriginalFileName))
     except Exception as e:
         print(e)
+        sys.stdout.flush()
     conn.commit()
     conn.close()
     return
