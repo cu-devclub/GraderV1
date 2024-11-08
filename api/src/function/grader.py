@@ -3,6 +3,7 @@ import json
 from io import StringIO
 from contextlib import redirect_stdout
 import stopit
+import sys
 
 
 def __filter_escapes(string):
@@ -135,6 +136,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     score = []
     num = 0
     print(len(solution))
+    sys.stdout.flush()
     for solIndex in range(len(solution)):
         temp_max_p = 0
         temp_cor_p = 0
@@ -153,6 +155,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
                         exec("\n\n".join(finalexec), {})
 
                 print(output)
+                sys.stdout.flush()
                 results = [""]
                 if context_manager.state != context_manager.TIMED_OUT:
                     # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
@@ -166,6 +169,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
             except Exception as e:
                 print(e)
+                sys.stdout.flush()
 
             num += 1
         score.append([temp_cor_p, temp_max_p])
