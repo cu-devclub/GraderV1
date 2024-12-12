@@ -131,7 +131,7 @@ def main():
         cur.execute("""
             SELECT ID, Path
             FROM addfile
-            WHERE LID = %s
+            WHERE LID = %s AND Hide = 0
         """, (LID,))
         add_files = cur.fetchall()
         add_files_list = [[af[0], os.path.split(af[1])[-1]] for af in add_files]

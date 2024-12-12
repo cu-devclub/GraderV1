@@ -77,7 +77,7 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
             # replacing file path
             if(len(addfile) != 0):
                 for afpath in addfile:
-                    afname = afpath.split("/")[-1]
+                    afname = afpath.split("\\")[-1]
                     temporaryTestcase = temporaryTestcase.replace(afname, afpath)
 
             tempararyTSCL = temporaryTestcase.split(temporarySplitWord)
@@ -132,6 +132,9 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     if len(Qinfo["Testcase"]) != len(solution):
         return True, f"Number of testcase and solution is not match. ({len(Qinfo['Testcase'])} testcase with {len(solution)} solution)"
 
+    
+    print(addfile)
+    print(Qinfo["Testcase"])
     score = []
     num = 0
     for solIndex in range(len(solution)):
@@ -156,13 +159,15 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
                     # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
                     results = output.getvalue().strip("\n").split("\n")
                 isPass = True
+                print(solIndex, results)
                 for result in results:
                     if(result != check_keyword):
                         isPass = False
                         break
                 if(isPass): temp_cor_p += Qinfo["Points"][num]
 
-            except Exception:
+            except Exception as e:
+                print(e)
                 pass
 
             num += 1
