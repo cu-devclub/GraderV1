@@ -3,7 +3,7 @@ import json
 from io import StringIO
 from contextlib import redirect_stdout
 import stopit
-import sys
+import os
 
 
 def __filter_escapes(string):
@@ -78,7 +78,7 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
             # replacing file path
             if(len(addfile) != 0):
                 for afpath in addfile:
-                    afname = afpath.split("\\")[-1]
+                    afname = os.path.split(afpath)[-1]
                     temporaryTestcase = temporaryTestcase.replace(afname, afpath)
 
             tempararyTSCL = temporaryTestcase.split(temporarySplitWord)
