@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import { FileEarmark, Download, Trash, PencilSquare, Plus} from 'react-bootstrap-icons';
+import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash} from 'react-bootstrap-icons';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -631,6 +631,68 @@ function AssignEdit() {
     .catch(error => console.error('Error:', error));
   }
 
+  const hideFile = async (i) => {
+    fetch(`${process.env.REACT_APP_HOST}/TA/class/Assign/hideaf`, {
+      method: 'POST',
+      credentials: "include",
+      headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          "X-CSRF-TOKEN": await Cookies.get("csrf_token")
+      },
+      body: JSON.stringify({ 
+        fileRequest: `${i}`,
+        CSYID: classId
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success){
+          fetchLab()
+          withReactContent(Swal).fire({
+            title: "Updated",
+            icon: "success"
+          })
+        }else{
+          withReactContent(Swal).fire({
+            title: data.msg,
+            icon: "error"
+          })
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
+  const showFile = async (i) => {
+    fetch(`${process.env.REACT_APP_HOST}/TA/class/Assign/showaf`, {
+      method: 'POST',
+      credentials: "include",
+      headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          "X-CSRF-TOKEN": await Cookies.get("csrf_token")
+      },
+      body: JSON.stringify({ 
+        fileRequest: `${i}`,
+        CSYID: classId
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success){
+          fetchLab()
+          withReactContent(Swal).fire({
+            title: "Updated",
+            icon: "success"
+          })
+        }else{
+          withReactContent(Swal).fire({
+            title: data.msg,
+            icon: "error"
+          })
+        }
+    })
+    .catch(error => console.error('Error:', error));
+  }
+
   return (
     <div>
       <Navbar />
@@ -775,37 +837,52 @@ function AssignEdit() {
                     
                   </div>
                   <div className='card-body'>
-                    {addfiles.map((a, i) => {
-                      return <div className='row'>
-                        <div key={`AD${i}`}  className='col-9' style={{paddingRight: "0px"}}>
-                          <button 
-                            type="button" 
-                            className="btn btn-outline-dark" 
-                            style={{width: "100%", textAlign: "Left", marginBottom: "0.5em", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap"}} 
-                            onClick={() => {downfile(0, 0, a[0])}}
-                            title={a[1]}
-                          >
-                            <span style={{color: "rgb(255, 178, 62)"}}>
-                              <FileEarmark />
-                            </span>
-                             Essential file {i+1}: {a[1]}
-                          </button>
+                    {addfiles.map((item, index) => {
+                      const [id, name, isVisible] = item;
+                      return (
+                        <div className="row" key={`AD${index}`}>
+                          <div className="col" style={{ paddingRight: "0px" }}>
+                            <button
+                              type="button"
+                              className="btn btn-outline-dark"
+                              style={{ width: "100%", textAlign: "Left", marginBottom: "0.5em", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}
+                              onClick={() => downfile(0, 0, id)}
+                              title={name}
+                            >
+                              <span style={{ color: "rgb(255, 178, 62)" }}>
+                                <FileEarmark />
+                              </span>
+                              Essential file {index + 1}: {name}
+                            </button>
+                          </div>
+                          <div className="col-3" style={{ paddingLeft: "0px" }}>
+                            <button
+                              type="button"
+                              className="btn btn-outline-warning"
+                              style={{ width: "auto", textAlign: "Left", marginBottom: "0.5em", marginLeft: "0.5em" }}
+                              onClick={() => editfilemodal(id)}
+                            >
+                              <PencilSquare />
+                            </button>
+                            <button
+                              type="button"
+                              className={`btn btn${isVisible ? "-outline" : "" }-secondary`}
+                              style={{ width: "auto", textAlign: "Left", marginBottom: "0.5em", marginLeft: "0.5em" }}
+                              onClick={() => (isVisible ? hideFile(id) : showFile(id))}
+                            >
+                              {isVisible ? <Eye /> : <EyeSlash />}
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-outline-danger"
+                              style={{ width: "auto", textAlign: "Left", marginBottom: "0.5em", marginLeft: "0.5em" }}
+                              onClick={() => delfile(id, name)}
+                            >
+                              <Trash />
+                            </button>
+                          </div>
                         </div>
-                        <div className='col-3' style={{paddingLeft: "0px"}}>
-                        <button
-                            type="button" 
-                            className="btn btn-outline-warning" 
-                            style={{width: "auto", textAlign: "Left", marginBottom: "0.5em", marginLeft: "0.5em"}} 
-                            onClick={() => {editfilemodal(a[0])}}
-                          ><PencilSquare /></button>
-                          <button
-                            type="button" 
-                            className="btn btn-outline-danger" 
-                            style={{width: "auto", textAlign: "Left", marginBottom: "0.5em", marginLeft: "0.5em"}} 
-                            onClick={() => {delfile(a[0], a[1])}}
-                          ><Trash /></button>
-                        </div>
-                      </div>
+                      );
                     })}
                   </div>
                 </div>
@@ -861,7 +938,7 @@ function AssignEdit() {
 
 
 
-        <div className={`modal fade ${showModal ? 'show' : ''}`} tabindex="-1" aria-labelledby="addfileModal" aria-hidden="true" style={{ display: showModal ? 'block' : 'none' }}>
+        <div className={`modal fade ${showModal ? 'show' : ''}`} tabIndex="-1" aria-labelledby="addfileModal" aria-hidden="true" style={{ display: showModal ? 'block' : 'none' }}>
           <div className="modal-dialog">
             <div className="modal-content">
               <div className="modal-header">

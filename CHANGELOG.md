@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.6.0] - 2024-12-12
+ 
+### Added
+- hide some additional file system
+
+### Changed
+
+### Fixed
+
 ## [v1.5.10] - 2024-10-16
  
 ### Added

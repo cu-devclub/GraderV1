@@ -3,6 +3,7 @@ import json
 from io import StringIO
 from contextlib import redirect_stdout
 import stopit
+import os
 
 
 def __filter_escapes(string):
@@ -77,7 +78,7 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
             # replacing file path
             if(len(addfile) != 0):
                 for afpath in addfile:
-                    afname = afpath.split("/")[-1]
+                    afname = os.path.split(afpath)[-1]
                     temporaryTestcase = temporaryTestcase.replace(afname, afpath)
 
             tempararyTSCL = temporaryTestcase.split(temporarySplitWord)
@@ -134,7 +135,6 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
     score = []
     num = 0
-    print(len(solution))
     for solIndex in range(len(solution)):
         temp_max_p = 0
         temp_cor_p = 0
@@ -152,7 +152,6 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
                     with redirect_stdout(output):
                         exec("\n\n".join(finalexec), {})
 
-                print(output)
                 results = [""]
                 if context_manager.state != context_manager.TIMED_OUT:
                     # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
@@ -166,6 +165,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
             except Exception as e:
                 print(e)
+                pass
 
             num += 1
         score.append([temp_cor_p, temp_max_p])
