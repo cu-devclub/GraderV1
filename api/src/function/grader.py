@@ -3,6 +3,7 @@ import json
 from io import StringIO
 from contextlib import redirect_stdout
 import stopit
+import sys
 
 
 def __filter_escapes(string):
@@ -132,9 +133,6 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     if len(Qinfo["Testcase"]) != len(solution):
         return True, f"Number of testcase and solution is not match. ({len(Qinfo['Testcase'])} testcase with {len(solution)} solution)"
 
-    
-    print(addfile)
-    print(Qinfo["Testcase"])
     score = []
     num = 0
     for solIndex in range(len(solution)):
@@ -153,13 +151,12 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
                 with stopit.ThreadingTimeout(timeout) as context_manager:
                     with redirect_stdout(output):
                         exec("\n\n".join(finalexec), {})
-                        
+
                 results = [""]
                 if context_manager.state != context_manager.TIMED_OUT:
                     # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
                     results = output.getvalue().strip("\n").split("\n")
                 isPass = True
-                print(solIndex, results)
                 for result in results:
                     if(result != check_keyword):
                         isPass = False
