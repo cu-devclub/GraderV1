@@ -8,7 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @jwt_required()
 def main():
     conn = get_db()
-    cursor = conn.cursor()\
+    cursor = conn.cursor()
 
     adder = get_jwt_identity()
     Data = request.get_json()

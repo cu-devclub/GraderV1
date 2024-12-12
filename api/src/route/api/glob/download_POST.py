@@ -12,6 +12,7 @@ from function.checkPermQDown import checkPermQDown
 from function.checkPermAddDown import checkPermAddDown
 from function.isAccess import isAccess
 from function.loadconfig import UPLOAD_FOLDER, config
+from function.isCET import isCET
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -57,6 +58,9 @@ def main():
     editBefore = True
 
     if FRL[0] == 0:
+        hide = " AND Hide = 0"
+        if isCET(g.db, cur, Email, None, FID=None):
+            hide = ""
         if not checkPermAddDown(FRL[2], Email, cur):
             return jsonify({
                 'success': False,
@@ -69,7 +73,7 @@ def main():
                 'msg': 'You do not have access to this file.',
                 'data': ""
             }), 200
-        query = "SELECT Path FROM addfile WHERE ID = %s"
+        query = f"SELECT Path FROM addfile WHERE ID = %s{hide}"
     elif FRL[0] == 1:
         if FRL[1] == 0:
             if not checkPermQDown(FRL[2], Email, 0, cur):

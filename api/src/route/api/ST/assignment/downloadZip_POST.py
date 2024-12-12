@@ -33,7 +33,7 @@ def main():
         }), 200
     
     # Get all additional files
-    cur.execute("SELECT Path from `addfile` WHERE LID = %s", (LID))
+    cur.execute("SELECT Path from `addfile` WHERE LID = %s AND Hide = 0", (LID))
     adf = cur.fetchall()
 
     zip_buffer = io.BytesIO()
