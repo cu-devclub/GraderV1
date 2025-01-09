@@ -83,21 +83,21 @@ jobs:
         name: Validate nginx.conf (DEVELOPMENT)
         if: github.ref_name == 'testing'
         run: |
-          if grep -q "d${{ secrets.TEST_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
+          if grep -q "${{ secrets.TEST_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
             echo "nginx.conf development validation passed"
           else
             echo "nginx.conf development validation failed" && exit 1
           fi
       -
         name: Edit nginx.conf (PRODUCTION)
-        if: github.ref_name == 'testing'
+        if: github.ref_name == 'latest'
         run: |
           sed -i 's/chula.ac.th/${{ secrets.PROD_NGINX_DOMAIN }}/g' ./frontend/nginx.conf
       -
         name: Validate nginx.conf (PRODUCTION)
-        if: github.ref_name == 'testing'
+        if: github.ref_name == 'latest'
         run: |
-          if grep -q "d${{ secrets.PROD_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
+          if grep -q "${{ secrets.PROD_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
             echo "nginx.conf development validation passed"
           else
             echo "nginx.conf development validation failed" && exit 1
