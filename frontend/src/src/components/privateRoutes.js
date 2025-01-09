@@ -76,8 +76,6 @@ function PrivateRoutes() {
         return <Outlet />
     }
 
-    console.log()
-
     if (loading) {
         return <div></div>;
     }

@@ -122,7 +122,7 @@ def main():
                     "OriginalName": q[7]
                 },
                 "Date": datetime.strptime(str(q[6]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
-                "Score": float("{:.2f}".format(q[2])),
+                "Score": float("{:.2f}".format(q[2])) if q[2] else "-",
                 "Max": int(q[3]),
                 "hideScore": bool(int(q[8])) and not lock
             })
