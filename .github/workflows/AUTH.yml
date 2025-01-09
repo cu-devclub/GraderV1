@@ -24,24 +24,41 @@ jobs:
       -
         name: Checkout repository
         uses: actions/checkout@v3
-      -
-        name: Make ENVFILE (LATEST)
+      # -
+      #   name: Make ENVFILE (LATEST)
+      #   if: github.ref_name == 'latest'
+      #   uses: SpicyPizza/create-envfile@v2.0
+      #   with:
+      #     envkey_COOKIE_SECRET: ${{ secrets.PROD_JWT_SECRET_KEY }}
+      #     envkey_PUBKEY: ${{ secrets.PROD_PUBKEY }}
+      #     file_name: .env
+      #     directory: ./auth/
+      # -
+      #   name: Make ENVFILE (TESTING)
+      #   if: github.ref_name == 'testing'
+      #   uses: SpicyPizza/create-envfile@v2.0
+      #   with:
+      #     envkey_COOKIE_SECRET: ${{ secrets.TEST_JWT_SECRET_KEY }}
+      #     envkey_PUBKEY: ${{ secrets.TEST_PUBKEY }}
+      #     file_name: .env
+      #     directory: ./auth/
+      
+      - name: Create ENVFILE (LATEST)
         if: github.ref_name == 'latest'
-        uses: SpicyPizza/create-envfile@v2.0
-        with:
-          envkey_COOKIE_SECRET: ${{ secrets.PROD_JWT_SECRET_KEY }}
-          envkey_PUBKEY: ${{ secrets.PROD_PUBKEY }}
-          file_name: .env
-          directory: ./auth/
-      -
-        name: Make ENVFILE (TESTING)
+        run: |
+          cat <<EOF > ./auth/.env
+          COOKIE_SECRET=${{ secrets.PROD_JWT_SECRET_KEY }}
+          PUBKEY=${{ secrets.PROD_PUBKEY }}
+          EOF
+
+      - 
+        name: Create ENVFILE (TESTING)
         if: github.ref_name == 'testing'
-        uses: SpicyPizza/create-envfile@v2.0
-        with:
-          envkey_COOKIE_SECRET: ${{ secrets.TEST_JWT_SECRET_KEY }}
-          envkey_PUBKEY: ${{ secrets.TEST_PUBKEY }}
-          file_name: .env
-          directory: ./auth/
+        run: |
+          cat <<EOF > ./auth/.env
+          COOKIE_SECRET=${{ secrets.TEST_JWT_SECRET_KEY }}
+          PUBKEY=${{ secrets.TEST_PUBKEY }}
+          EOF
       -
         name: create-json (LATEST)
         if: github.ref_name == 'latest'
