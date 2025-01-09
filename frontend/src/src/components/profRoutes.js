@@ -14,8 +14,6 @@ function ProfRoutes() {
     const perm = usePerm();
     const {id, } = useParams();
 
-    console.log(id)
-
     useEffect(() => {
         async function checkPermissions() {
             try {
