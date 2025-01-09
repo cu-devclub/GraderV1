@@ -33,36 +33,71 @@ jobs:
       #   name: Create .env file
       #   if: github.ref_name == 'testing'
       #   run: echo "${{ secrets.TEST_FRONT_VAR }}" > ./frontend/src/.env
-      -
-        name: Make ENVFILE (LATEST)
+      # -
+      #   name: Make ENVFILE (LATEST)
+      #   if: github.ref_name == 'latest'
+      #   uses: SpicyPizza/create-envfile@v2.0
+      #   with:
+      #     envkey_PORT: ${{ secrets.PROD_PORT_FRONT }}
+      #     envkey_REACT_APP_HOST: ${{ secrets.PROD_API }}
+      #     envkey_REACT_APP_DEV: ${{ secrets.PROD_DEV }}
+      #     file_name: .env
+      #     directory: ./frontend/src/
+      - 
+        name: Create .env File
         if: github.ref_name == 'latest'
-        uses: SpicyPizza/create-envfile@v2.0
-        with:
-          envkey_PORT: ${{ secrets.PROD_PORT_FRONT }}
-          envkey_REACT_APP_HOST: ${{ secrets.PROD_API }}
-          envkey_REACT_APP_DEV: ${{ secrets.PROD_DEV }}
-          file_name: .env
-          directory: ./frontend/src/
-      -
-        name: Make ENVFILE (TESTING)
-        if: github.ref_name == 'testing'
-        uses: SpicyPizza/create-envfile@v2.0
-        with:
-          envkey_PORT: ${{ secrets.TEST_PORT_FRONT }}
-          envkey_REACT_APP_HOST: ${{ secrets.TEST_API }}
-          envkey_REACT_APP_DEV: ${{ secrets.TEST_DEV }}
-          file_name: .env
-          directory: ./frontend/src/
+        run: |
+          cat <<EOF > ./frontend/src/.env
+          PORT=${{ secrets.PROD_PORT_FRONT }}
+          REACT_APP_HOST=${{ secrets.PROD_API }}
+          REACT_APP_DEV=${{ secrets.PROD_DEV }}
+          EOF
+
+      # -
+      #   name: Make ENVFILE (TESTING)
+      #   if: github.ref_name == 'testing'
+      #   uses: SpicyPizza/create-envfile@v2.0
+      #   with:
+      #     envkey_PORT: ${{ secrets.TEST_PORT_FRONT }}
+      #     envkey_REACT_APP_HOST: ${{ secrets.TEST_API }}
+      #     envkey_REACT_APP_DEV: ${{ secrets.TEST_DEV }}
+      #     file_name: .env
+      #     directory: ./frontend/src/
+
+      - 
+        name: Create .env File
+        if: github.ref_name == 'latest'
+        run: |
+          cat <<EOF > ./frontend/src/.env
+          PORT=${{ secrets.TEST_PORT_FRONT }}
+          REACT_APP_HOST=${{ secrets.TEST_API }}
+          REACT_APP_DEV=${{ secrets.TEST_DEV }}
+          EOF
+
       -
         name: Edit nginx.conf (DEVELOPMENT)
         if: github.ref_name == 'testing'
         run: |
-          sed -i 's/sci.cugrader.com/dev.cugrader.com/g' ./frontend/nginx.conf
+          sed -i 's/chula.ac.th/${{ secrets.TEST_NGINX_DOMAIN }}/g' ./frontend/nginx.conf
       -
         name: Validate nginx.conf (DEVELOPMENT)
         if: github.ref_name == 'testing'
         run: |
-          if grep -q "dev.cugrader.com" ./frontend/nginx.conf && ! grep -q "sci.cugrader.com" ./frontend/nginx.conf; then
+          if grep -q "d${{ secrets.TEST_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
+            echo "nginx.conf development validation passed"
+          else
+            echo "nginx.conf development validation failed" && exit 1
+          fi
+      -
+        name: Edit nginx.conf (PRODUCTION)
+        if: github.ref_name == 'testing'
+        run: |
+          sed -i 's/chula.ac.th/${{ secrets.PROD_NGINX_DOMAIN }}/g' ./frontend/nginx.conf
+      -
+        name: Validate nginx.conf (PRODUCTION)
+        if: github.ref_name == 'testing'
+        run: |
+          if grep -q "d${{ secrets.PROD_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
             echo "nginx.conf development validation passed"
           else
             echo "nginx.conf development validation failed" && exit 1
