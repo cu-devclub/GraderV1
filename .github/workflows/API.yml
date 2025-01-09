@@ -99,7 +99,7 @@ jobs:
           JWT_SECRET_KEY=${{ secrets.PROD_JWT_SECRET_KEY }}
           HOST=${{ secrets.PROD_HOST }}
           PORT=${{ secrets.PROD_PORT }}
-          dev=${{ secrets.PROD_DEV }}
+          DEV=${{ secrets.PROD_DEV }}
           DBHOST=${{ secrets.PROD_DBHOST }}
           DBUSER=${{ secrets.PROD_DBUSER }}
           DBPASS=${{ secrets.PROD_DBPASS }}
@@ -117,7 +117,7 @@ jobs:
           JWT_SECRET_KEY=${{ secrets.TEST_JWT_SECRET_KEY }}
           HOST=${{ secrets.TEST_HOST }}
           PORT=${{ secrets.TEST_PORT }}
-          dev=${{ secrets.TEST_DEV }}
+          DEV=${{ secrets.TEST_DEV }}
           DBHOST=${{ secrets.TEST_DBHOST }}
           DBUSER=${{ secrets.TEST_DBUSER }}
           DBPASS=${{ secrets.TEST_DBPASS }}
