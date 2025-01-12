@@ -1,6 +1,16 @@
 
 # Change Log
 
+## [v1.6.1] - 2025-01-09
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - null score return o expected "-"
+    - assign edit show check in/out button even non exam mode
+
 ## [v1.6.0] - 2024-12-12
  
 ### Added

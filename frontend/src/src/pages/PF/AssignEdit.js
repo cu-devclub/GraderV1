@@ -141,6 +141,10 @@ function AssignEdit() {
     fetchLab()
   }, [classId, LID]);
 
+  useEffect(() => {
+    sessionStorage.setItem("isExam", isExamFromServ)
+  }, [isExamFromServ])
+
   const handlePublishDateChange = (e) => {
     setPublishDate(e.target.value)
   }
@@ -716,13 +720,13 @@ function AssignEdit() {
                       <button className="nav-link active">Edit</button>
                   </li>
                   <li className="nav-item">
-                      <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/Sentin")}} >Sent in</button>
+                    <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/Sentin")}} >Sent in</button>
                   </li>
                   <li className="nav-item">
-                      <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/AssignSus")}} >Suspicious</button>
+                    <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/AssignSus")}} >Suspicious</button>
                   </li>
                   <li className="nav-item">
-                      { isExamFromServ ? (<button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}} >Check in-out</button>) : ("")}
+                    { isExamFromServ ? (<button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}} >Check in-out</button>) : ("")}
                   </li>
                 </ul>
               </div>

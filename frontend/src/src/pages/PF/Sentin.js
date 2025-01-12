@@ -17,6 +17,8 @@ function Sentin() {
   const [LID,] = useState(sessionStorage.getItem("LID"))
   const [ClassInfo, setClassInfo] = useState({});
 
+  const isExamFromServ = sessionStorage.getItem("isExam") === 'true';
+
   const [Scores, setScores] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -202,7 +204,7 @@ function Sentin() {
                   <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/AssignSus")}} >Suspicious</button>
                 </li>
                 <li className="nav-item">
-                  <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}} >Check in-out</button>
+                  { isExamFromServ ? (<button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}} >Check in-out</button>) : ("")}
                 </li>
               </ul>
             </div>
