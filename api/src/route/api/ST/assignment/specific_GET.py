@@ -112,7 +112,6 @@ def main():
             if not timestamp:
                 late = -1
                 
-            print(q[2], type(q[2]))
             questions_list.append({
                 "QID": q[0],
                 "SMT": {
