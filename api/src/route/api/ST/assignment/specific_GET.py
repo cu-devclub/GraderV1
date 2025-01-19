@@ -87,8 +87,8 @@ def main():
                 q.QID,
                 COALESCE(s.SID, -1) AS SID,
                 CASE 
-                    WHEN l.showScoreOnLock = 1 AND (l.Lock IS NULL OR CONVERT_TZ(NOW(), '+00:00', '+07:00') < l.Lock) THEN 0
-                    ELSE COALESCE(s.Score, 0)
+                    WHEN l.showScoreOnLock = 1 AND (l.Lock IS NULL OR CONVERT_TZ(NOW(), '+00:00', '+07:00') < l.Lock) THEN NULL
+                    ELSE s.Score
                 END AS Score,
                 q.MaxScore,
                 COALESCE(s.SummitedFile, '') AS Filename,
@@ -112,6 +112,7 @@ def main():
             if not timestamp:
                 late = -1
                 
+            print(q[2], type(q[2]))
             questions_list.append({
                 "QID": q[0],
                 "SMT": {
@@ -122,7 +123,7 @@ def main():
                     "OriginalName": q[7]
                 },
                 "Date": datetime.strptime(str(q[6]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
-                "Score": float("{:.2f}".format(q[2])) if q[2] else "-",
+                "Score": float("{:.2f}".format(q[2])) if q[2] != None else "-",
                 "Max": int(q[3]),
                 "hideScore": bool(int(q[8])) and not lock
             })

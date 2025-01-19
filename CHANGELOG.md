@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.6.2] - 2025-01-20
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - 0 score return "-" expected 0
+
 ## [v1.6.1] - 2025-01-09
  
 ### Added
