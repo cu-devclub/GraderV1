@@ -76,7 +76,7 @@ def main():
             Release_files[i].save(PathR)
             Qinfo = grader.QinfoGenerate(PathS, addfile=AddFileForQinfo)
             Qry = "INSERT INTO question (LID, SourcePath, ReleasePath, MaxScore, LastEdit, CSYID, Qinfo) VALUES (%s, %s, %s, %s, %s, %s, %s)"
-            cursor.execute(Qry, (LID, PathS, PathR, Question[i-1]["score"], datetime.now(gmt_timezone), form["CSYID"], json.dumps(Qinfo)))
+            cursor.execute(Qry, (LID, PathS, PathR, Question[i]["score"], datetime.now(gmt_timezone), form["CSYID"], json.dumps(Qinfo)))
             conn.commit()
         
         return jsonify({
