@@ -130,43 +130,82 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     # return True, json.dumps(Qinfo)
     
     #check number of testcase list and solution
-    if len(Qinfo["Testcase"]) != len(solution):
-        return True, f"Number of testcase and solution is not match. ({len(Qinfo['Testcase'])} testcase with {len(solution)} solution)"
+    # if len(Qinfo["Testcase"]) != len(solution):
+    #     return True, f"Number of testcase and solution is not match. ({len(Qinfo['Testcase'])} testcase with {len(solution)} solution)"
+
+
 
     score = []
-    num = 0
-    for solIndex in range(len(solution)):
-        temp_max_p = 0
+
+    solutionSumed = "\n".join(solution)
+    testcaseSumList = sum(Qinfo['Testcase'],[])
+
+    for tcIndex in range(len(testcaseSumList)):
+        temp_max_p = Qinfo["Points"][tcIndex]
         temp_cor_p = 0
-        for test in Qinfo["Testcase"][solIndex]:
-            temp_max_p += Qinfo["Points"][num]
-            try:
-                if(Qinfo["TesterLoc"] == 0):
-                    finalexec = [Qinfo["Tester"], solution[solIndex], test]
-                else:
-                    finalexec = [solution[solIndex], Qinfo["Tester"], test]
+        try:
+            if(Qinfo["TesterLoc"] == 0):
+                finalexec = [Qinfo["Tester"], solutionSumed, testcaseSumList[tcIndex]]
+            else:
+                finalexec = [solutionSumed, Qinfo["Tester"], testcaseSumList[tcIndex]]
 
-                output = StringIO()
+            output = StringIO()
 
-                with stopit.ThreadingTimeout(timeout) as context_manager:
-                    with redirect_stdout(output):
-                        exec("\n\n".join(finalexec), {})
+            with stopit.ThreadingTimeout(timeout) as context_manager:
+                with redirect_stdout(output):
+                    exec("\n\n".join(finalexec), {})
 
-                results = [""]
-                if context_manager.state != context_manager.TIMED_OUT:
-                    # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
-                    results = output.getvalue().strip("\n").split("\n")
-                isPass = True
-                for result in results:
-                    if(result != check_keyword):
-                        isPass = False
-                        break
-                if(isPass): temp_cor_p += Qinfo["Points"][num]
+            results = [""]
+            if context_manager.state != context_manager.TIMED_OUT:
+                # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
+                results = output.getvalue().strip("\n").split("\n")
+            isPass = True
+            for result in results:
+                if(result != check_keyword):
+                    isPass = False
+                    break
+            if(isPass): temp_cor_p += Qinfo["Points"][tcIndex]
 
-            except Exception as e:
-                print(e)
-                pass
-
-            num += 1
+        except Exception as e:
+            print(e)
+            pass
         score.append([temp_cor_p, temp_max_p])
     return False, score
+
+    # score = []
+    # num = 0
+    # for solIndex in range(len(solution)):
+    #     temp_max_p = 0
+    #     temp_cor_p = 0
+    #     for test in Qinfo["Testcase"][solIndex]:
+    #         temp_max_p += Qinfo["Points"][num]
+    #         try:
+    #             if(Qinfo["TesterLoc"] == 0):
+    #                 finalexec = [Qinfo["Tester"], solution[solIndex], test]
+    #             else:
+    #                 finalexec = [solution[solIndex], Qinfo["Tester"], test]
+
+    #             output = StringIO()
+
+    #             with stopit.ThreadingTimeout(timeout) as context_manager:
+    #                 with redirect_stdout(output):
+    #                     exec("\n\n".join(finalexec), {})
+
+    #             results = [""]
+    #             if context_manager.state != context_manager.TIMED_OUT:
+    #                 # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
+    #                 results = output.getvalue().strip("\n").split("\n")
+    #             isPass = True
+    #             for result in results:
+    #                 if(result != check_keyword):
+    #                     isPass = False
+    #                     break
+    #             if(isPass): temp_cor_p += Qinfo["Points"][num]
+
+    #         except Exception as e:
+    #             print(e)
+    #             pass
+
+    #         num += 1
+    #     score.append([temp_cor_p, temp_max_p])
+    # return False, score
