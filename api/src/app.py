@@ -132,3 +132,4 @@ print(tabulate(mount_info, headers=['Route', 'Method', "Path"]))
 if __name__ == "__main__":
     app.run(debug=isDev, host=config['HOST'], port=int(config['PORT']))
     
+    
