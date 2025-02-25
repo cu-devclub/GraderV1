@@ -4,6 +4,7 @@ from io import StringIO
 from contextlib import redirect_stdout
 import stopit
 import os
+import re
 
 
 def __filter_escapes(string):
@@ -94,7 +95,17 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
 
     return template
     
-
+def __insert_pass(lines):
+    new_lines = []
+    for line in lines:
+        match = re.match(r"^(\s*)def\s+\w+", line)
+        if match:
+            indent = match.group(1)  # Capture the leading spaces
+            new_lines.append(line)
+            new_lines.append(indent * 2 + "pass\n")  # Insert 'pass' with double indentation
+        else:
+            new_lines.append(line)
+    return new_lines
 
 # Public grade method    
 def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword="True", Qinfo=None, protectWrite=True):
@@ -114,7 +125,8 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     solution = []
     for i in range(len(codeCell)):
         if codeCell[i]["metadata"]["nbgrader"]["solution"]:
-            TempSol = temporarySplitWord.join(codeCell[i]["source"])
+            inserted_pass = __insert_pass(codeCell[i]["source"])
+            TempSol = temporarySplitWord.join(inserted_pass)
 
             # Write method protection
             if(protectWrite):
