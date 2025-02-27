@@ -125,8 +125,9 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     solution = []
     for i in range(len(codeCell)):
         if codeCell[i]["metadata"]["nbgrader"]["solution"]:
-            inserted_pass = __insert_pass(codeCell[i]["source"])
-            TempSol = temporarySplitWord.join(inserted_pass)
+            # inserted_pass = __insert_pass(codeCell[i]["source"])
+            # TempSol = temporarySplitWord.join(inserted_pass)
+            TempSol = temporarySplitWord.join(codeCell[i]["source"])
 
             # Write method protection
             if(protectWrite):
