@@ -5,6 +5,7 @@ from contextlib import redirect_stdout
 import stopit
 import os
 import re
+from collections import Counter
 
 
 def __filter_escapes(string):
@@ -95,14 +96,28 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
 
     return template
     
+def __detect_tab_size(lines):
+    indents = []
+    
+    for line in lines:
+        match = re.match(r"^( +)\S", line)  # Match leading spaces before content
+        if match:
+            indents.append(len(match.group(1)))  # Store indentation size
+    
+    if indents:
+        common_indent = Counter(indents).most_common(1)[0][0]  # Most common indentation size
+        return common_indent
+    return 4
+
 def __insert_pass(lines):
+    tabSize = __detect_tab_size(lines)
     new_lines = []
     for line in lines:
         match = re.match(r"^(\s*)def\s+\w+", line)
         if match:
             indent = match.group(1)  # Capture the leading spaces
             new_lines.append(line)
-            new_lines.append(indent * 2 + "pass\n")  # Insert 'pass' with double indentation
+            new_lines.append(indent + " " * tabSize + "pass\n")  # Insert 'pass' with double indentation
         else:
             new_lines.append(line)
     return new_lines
