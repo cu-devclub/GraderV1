@@ -7,6 +7,8 @@ import os
 import re
 from collections import Counter
 
+import ast
+
 
 def __filter_escapes(string):
     string = (
@@ -97,16 +99,24 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
     return template
     
 def __detect_tab_size(lines):
-    indents = []
+    def_indent = None
+    first_line_indent = None
     
     for line in lines:
-        match = re.match(r"^( +)\S", line)  # Match leading spaces before content
+        match = re.match(r"^( *)(def )", line)
         if match:
-            indents.append(len(match.group(1)))  # Store indentation size
+            def_indent = len(match.group(1))
+            continue
+        
+        if def_indent is not None:
+            match = re.match(r"^( +)\S", line)
+            if match:
+                first_line_indent = len(match.group(1))
+                break
     
-    if indents:
-        common_indent = Counter(indents).most_common(1)[0][0]  # Most common indentation size
-        return common_indent
+    if def_indent is not None and first_line_indent is not None:
+        return first_line_indent - def_indent
+    
     return 4
 
 def __insert_pass(lines):
@@ -121,6 +131,21 @@ def __insert_pass(lines):
         else:
             new_lines.append(line)
     return new_lines
+
+
+def __fix_syntax_errors(code_list):
+    fixed_list = []
+    for code in code_list:
+        functions = re.findall(r'def \w+\s*\(.*?\):.*?(?=\ndef |$)', code, re.DOTALL)
+        fixed_code = code
+        for func in functions:
+            try:
+                ast.parse(func)
+            except SyntaxError:
+                func_name = func.split('(')[0].split()[1]  # Extract function name
+                fixed_code = fixed_code.replace(func, f"def {func_name}(): pass")
+        fixed_list.append(fixed_code)
+    return fixed_list
 
 # Public grade method    
 def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword="True", Qinfo=None, protectWrite=True):
@@ -165,7 +190,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
     score = []
 
-    solutionSumed = "\n".join(solution)
+    solutionSumed = "\n".join(__fix_syntax_errors(solution))
     testcaseSumList = sum(Qinfo['Testcase'],[])
 
     for tcIndex in range(len(testcaseSumList)):
