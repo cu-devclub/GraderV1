@@ -1,6 +1,16 @@
 
 # Change Log
 
+## [v1.6.4] - 2025-03-22
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - syntax error 0 score
+    - indent counter function
+
 ## [v1.6.3] - 2025-01-24
  
 ### Added
