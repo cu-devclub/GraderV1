@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.6.5] - 2025-03-24
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - fix function compatible wth class
+
 ## [v1.6.4] - 2025-03-22
  
 ### Added

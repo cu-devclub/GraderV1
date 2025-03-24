@@ -132,19 +132,57 @@ def __insert_pass(lines):
             new_lines.append(line)
     return new_lines
 
+def __get_function_at_line(code, lineno):
+    """Finds and returns the function definition that starts at a given line number."""
+    lines = code.splitlines(keepends=True)
+    start = None
+
+    for i, line in enumerate(lines):
+        if line.strip().startswith("def ") and (i + 1) <= lineno:
+            start = i  # Found a function that could contain the error
+    
+    if start is None:
+        return None, None  # No function header found before the error line
+
+    # Find where the function ends
+    end = start + 1
+    while end < len(lines) and not lines[end].strip().startswith("def "):
+        end += 1  # Continue until the next function starts
+
+    func_code = "".join(lines[start:end])
+    return func_code, (start, end)
 
 def __fix_syntax_errors(code_list):
+    """Fix syntax errors one at a time until the script is valid."""
     fixed_list = []
+
     for code in code_list:
-        functions = re.findall(r'def \w+\s*\(.*?\):.*?(?=\ndef |$)', code, re.DOTALL)
-        fixed_code = code
-        for func in functions:
+        while True:
             try:
-                ast.parse(func)
-            except SyntaxError:
-                func_name = func.split('(')[0].split()[1]  # Extract function name
-                fixed_code = fixed_code.replace(func, f"def {func_name}(): pass")
-        fixed_list.append(fixed_code)
+                ast.parse(code)  # Try parsing the entire code
+                break  # No errors, move to next
+            except SyntaxError as e:
+                lineno = e.lineno  # Line number of error
+
+                # Try to find the function where the error occurred
+                func_code, (start, end) = __get_function_at_line(code, lineno)
+
+                if func_code:
+                    # If error is inside a function, replace only that function
+                    func_name = func_code.split('(')[0].split()[1]
+                    fixed_func = f"def {func_name}(): pass\n"
+                    code_lines = code.splitlines(keepends=True)
+                    code_lines[start:end] = [fixed_func]  # Replace function block
+                    code = "".join(code_lines)
+                else:
+                    # If error is outside a function, just replace the bad line with "pass"
+                    code_lines = code.splitlines(keepends=True)
+                    if lineno <= len(code_lines):
+                        code_lines[lineno - 1] = "pass\n"  # Replace bad line
+                        code = "".join(code_lines)
+
+        fixed_list.append(code)
+    
     return fixed_list
 
 # Public grade method    
@@ -189,6 +227,8 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
 
     score = []
+
+
 
     solutionSumed = "\n".join(__fix_syntax_errors(solution))
     testcaseSumList = sum(Qinfo['Testcase'],[])
