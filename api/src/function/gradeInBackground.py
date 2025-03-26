@@ -15,6 +15,7 @@ def gradeInBackground(Source, addfiles, filepath, QID, MaxScore, UID, LID, uploa
             conn.commit()
     
         err, data = grader.grade(Source, filepath, addfile=addfiles, validate=False, check_keyword="ok", timeout=2, Qinfo=Qinfo)
+        print(data)
         if err:
             data = [[0, 1]]
     
