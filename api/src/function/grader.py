@@ -119,63 +119,75 @@ def __detect_tab_size(lines):
     
     return 4
 
-def __insert_pass(lines):
-    tabSize = __detect_tab_size(lines)
-    new_lines = []
-    for line in lines:
-        match = re.match(r"^(\s*)def\s+\w+", line)
-        if match:
-            indent = match.group(1)  # Capture the leading spaces
-            new_lines.append(line)
-            new_lines.append(indent + " " * tabSize + "pass\n")  # Insert 'pass' with double indentation
-        else:
-            new_lines.append(line)
-    return new_lines
+# def __insert_pass(lines):
+#     tabSize = __detect_tab_size(lines)
+#     new_lines = []
+#     for line in lines:
+#         match = re.match(r"^(\s*)def\s+\w+", line)
+#         if match:
+#             indent = match.group(1)  # Capture the leading spaces
+#             new_lines.append(line)
+#             new_lines.append(indent + " " * tabSize + "pass\n")  # Insert 'pass' with double indentation
+#         else:
+#             new_lines.append(line)
+#     return new_lines
 
 def __get_function_at_line(code, lineno):
-    """Finds and returns the function definition that starts at a given line number."""
-    lines = code.splitlines(keepends=True)
-    start = None
-
-    for i, line in enumerate(lines):
-        if line.strip().startswith("def ") and (i + 1) <= lineno:
-            start = i  # Found a function that could contain the error
+    """Finds and returns the function definition that starts at or before a given line number."""
+    lines = code.splitlines()
     
-    if start is None:
-        return None, None  # No function header found before the error line
+    for i in range(lineno, -1, -1):  # Start from the given line and move upwards
+        if lines[i].strip().startswith("def "):
+            start = i
+            break
+    else:
+        return None, None  # No function found before or at lineno
 
-    # Find where the function ends
-    end = start + 1
-    while end < len(lines) and not lines[end].strip().startswith("def "):
-        end += 1  # Continue until the next function starts
+    # Find the end of the function
+    end = start + 1 if len(lines) > 1 else start
+    while len(lines) > 1 and end < len(lines) and not lines[end].strip().startswith("def "):
+        end += 1
 
     func_code = "".join(lines[start:end])
     return func_code, (start, end)
+    
 
-def __fix_syntax_errors(code_list):
+def __max_less_or_equal(lst, num):
+    return max((x for x in lst if x <= num), default=None)
+
+def __deflocate(code):
+    def_loc = []
+
+    lines = code.split("\n")
+    for i in range(len(lines)):
+        if "def " in lines[i]:
+            def_loc.append(i)
+    return def_loc
+            
+
+
+def __fix_syntax_errors(code_list, submitName):
     """Fix syntax errors one at a time until the script is valid."""
     fixed_list = []
 
-    fixed_time = 0
-
     for code in code_list:
+        tabSize = __detect_tab_size(code.split("\n"))
         while True:
-            if fixed_time > 20:
-                break
-            fixed_time += 1
+            def_loc = __deflocate(code)
             try:
                 ast.parse(code)  # Try parsing the entire code
                 break  # No errors, move to next
             except SyntaxError as e:
-                lineno = e.lineno  # Line number of error
+                errorMsg_arg = e.msg.split(" ")
+                lineno = e.lineno - 1 if "line" not in e.msg else int(errorMsg_arg[errorMsg_arg.index("line") + 1]) - 1  # Line number of error
 
-                # Try to find the function where the error occurred
-                func_code, (start, end) = __get_function_at_line(code, lineno)
+                func_code, (start, end) = __get_function_at_line(code, __max_less_or_equal(def_loc, lineno))
 
                 if func_code:
                     # If error is inside a function, replace only that function
+                    indent = func_code.split("def")[0]
                     func_name = func_code.split('(')[0].split()[1]
-                    fixed_func = f"def {func_name}(): pass\n"
+                    fixed_func = f"{indent}def {func_name}():\n{indent}{tabSize*' '}pass\n"
                     code_lines = code.splitlines(keepends=True)
                     code_lines[start:end] = [fixed_func]  # Replace function block
                     code = "".join(code_lines)
@@ -208,9 +220,8 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     solution = []
     for i in range(len(codeCell)):
         if codeCell[i]["metadata"]["nbgrader"]["solution"]:
-            # inserted_pass = __insert_pass(codeCell[i]["source"])
-            # TempSol = temporarySplitWord.join(inserted_pass)
-            TempSol = temporarySplitWord.join(codeCell[i]["source"])
+            inserted_pass = codeCell[i]["source"] #__insert_pass(codeCell[i]["source"])
+            TempSol = temporarySplitWord.join(inserted_pass)
 
             # Write method protection
             if(protectWrite):
@@ -235,7 +246,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
 
 
-    solutionSumed = "\n".join(__fix_syntax_errors(solution))
+    solutionSumed = "\n".join(__fix_syntax_errors(solution, submit))
     testcaseSumList = sum(Qinfo['Testcase'],[])
 
     for tcIndex in range(len(testcaseSumList)):
@@ -269,41 +280,3 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
             pass
         score.append([temp_cor_p, temp_max_p])
     return False, score
-
-    # score = []
-    # num = 0
-    # for solIndex in range(len(solution)):
-    #     temp_max_p = 0
-    #     temp_cor_p = 0
-    #     for test in Qinfo["Testcase"][solIndex]:
-    #         temp_max_p += Qinfo["Points"][num]
-    #         try:
-    #             if(Qinfo["TesterLoc"] == 0):
-    #                 finalexec = [Qinfo["Tester"], solution[solIndex], test]
-    #             else:
-    #                 finalexec = [solution[solIndex], Qinfo["Tester"], test]
-
-    #             output = StringIO()
-
-    #             with stopit.ThreadingTimeout(timeout) as context_manager:
-    #                 with redirect_stdout(output):
-    #                     exec("\n\n".join(finalexec), {})
-
-    #             results = [""]
-    #             if context_manager.state != context_manager.TIMED_OUT:
-    #                 # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
-    #                 results = output.getvalue().strip("\n").split("\n")
-    #             isPass = True
-    #             for result in results:
-    #                 if(result != check_keyword):
-    #                     isPass = False
-    #                     break
-    #             if(isPass): temp_cor_p += Qinfo["Points"][num]
-
-    #         except Exception as e:
-    #             print(e)
-    #             pass
-
-    #         num += 1
-    #     score.append([temp_cor_p, temp_max_p])
-    # return False, score
