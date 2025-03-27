@@ -156,8 +156,13 @@ def __fix_syntax_errors(code_list):
     """Fix syntax errors one at a time until the script is valid."""
     fixed_list = []
 
+    fixed_time = 0
+
     for code in code_list:
         while True:
+            if fixed_time > 20:
+                break
+            fixed_time += 1
             try:
                 ast.parse(code)  # Try parsing the entire code
                 break  # No errors, move to next
