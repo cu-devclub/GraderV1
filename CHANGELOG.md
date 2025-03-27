@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.6.6] - 2025-03-27
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - fix function loop
+
 ## [v1.6.5] - 2025-03-24
  
 ### Added

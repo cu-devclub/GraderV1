@@ -14,6 +14,7 @@ def gradeInBackground(Source, addfiles, filepath, QID, MaxScore, UID, LID, uploa
             cursor.execute(Qinfo_query, (json.dumps(Qinfo), QID))
             conn.commit()
     
+        print("Grading", filepath)
         err, data = grader.grade(Source, filepath, addfile=addfiles, validate=False, check_keyword="ok", timeout=2, Qinfo=Qinfo)
         if err:
             data = [[0, 1]]
