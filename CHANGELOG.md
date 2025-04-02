@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.6.7] - 2025-04-02
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - fix stuck input
+
 ## [v1.6.6] - 2025-03-27
  
 ### Added

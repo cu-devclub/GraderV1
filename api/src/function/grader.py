@@ -1,11 +1,11 @@
 import subprocess
 import json
-from io import StringIO
+import io
 from contextlib import redirect_stdout
 import stopit
 import os
 import re
-from collections import Counter
+import threading
 
 import ast
 
@@ -28,7 +28,7 @@ def __filter_escapes(string):
 # Validation by nbgrader
 def __validate(filename):
     cmd = f'python -m nbgrader validate {filename}'
-    temp_f = StringIO()
+    temp_f = io.StringIO()
     with redirect_stdout(temp_f):
         res = subprocess.run(cmd.split(), stdout=subprocess.PIPE)
     out = __filter_escapes(res.stdout.decode("utf-8"))
@@ -119,19 +119,6 @@ def __detect_tab_size(lines):
     
     return 4
 
-# def __insert_pass(lines):
-#     tabSize = __detect_tab_size(lines)
-#     new_lines = []
-#     for line in lines:
-#         match = re.match(r"^(\s*)def\s+\w+", line)
-#         if match:
-#             indent = match.group(1)  # Capture the leading spaces
-#             new_lines.append(line)
-#             new_lines.append(indent + " " * tabSize + "pass\n")  # Insert 'pass' with double indentation
-#         else:
-#             new_lines.append(line)
-#     return new_lines
-
 def __get_function_at_line(code, lineno):
     """Finds and returns the function definition that starts at or before a given line number."""
     lines = code.splitlines()
@@ -212,37 +199,43 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     with open(submit, "r", encoding= "utf-8") as f:
         submitfile = json.loads(f.read())
  
-    # Filter code cell
     codeCell = [i for i in submitfile["cells"] if (i.get("cell_type") == "code" and i["metadata"].get("nbgrader") != None)]
 
-    # Get solution cell
     temporarySplitWord = "+|spliter|+"
     solution = []
     for i in range(len(codeCell)):
         if codeCell[i]["metadata"]["nbgrader"]["solution"]:
-            inserted_pass = codeCell[i]["source"] #__insert_pass(codeCell[i]["source"])
+            inserted_pass = codeCell[i]["source"]
             TempSol = temporarySplitWord.join(inserted_pass)
 
-            # Write method protection
             if(protectWrite):
                 if ".write(" in TempSol or "os.remove(" in TempSol: return True, "This file contain file write method it may broke the additional assignment files"
             
-            # join solution
             solution.append("".join(TempSol.split(temporarySplitWord)))         
 
     if Qinfo is None:
         Qinfo = QinfoGenerate(Question, addfile)
 
-    # if len(Qinfo) == 0:
-    # return True, json.dumps(Qinfo)
-    
-    #check number of testcase list and solution
-    # if len(Qinfo["Testcase"]) != len(solution):
-    #     return True, f"Number of testcase and solution is not match. ({len(Qinfo['Testcase'])} testcase with {len(solution)} solution)"
-
-
-
     score = []
+
+
+    def __safe_input(prompt):
+        result = [None]
+
+        def get_input():
+            try:
+                result[0] = input(prompt)
+            except EOFError:
+                result[0] = None
+
+        thread = threading.Thread(target=get_input)
+        thread.start()
+        thread.join(timeout)
+
+        if thread.is_alive():
+            return ""
+        
+        return result[0] if result[0] is not None else ""
 
 
 
@@ -258,16 +251,16 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
             else:
                 finalexec = [solutionSumed, Qinfo["Tester"], testcaseSumList[tcIndex]]
 
-            output = StringIO()
+            output = io.StringIO()
 
             with stopit.ThreadingTimeout(timeout) as context_manager:
                 with redirect_stdout(output):
-                    exec("\n\n".join(finalexec), {})
+                    exec("\n\n".join(finalexec).replace("input(", "safe_input("), {"safe_input": __safe_input})
 
             results = [""]
             if context_manager.state != context_manager.TIMED_OUT:
-                # return True, f"This submittion have stuck in loop that run longer than {timeout} seconds"
                 results = output.getvalue().strip("\n").split("\n")
+
             isPass = True
             for result in results:
                 if(result != check_keyword):
