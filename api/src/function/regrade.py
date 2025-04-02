@@ -1,6 +1,8 @@
 import json
 
 import function.grader as grader
+from function.gradeInBackground import gradeInBackground
+from function.loadconfig import executor
 
 def regrade(conn, cursor, isSourceUpdate: bool, QID, LID):
     if QID == None:
@@ -8,7 +10,6 @@ def regrade(conn, cursor, isSourceUpdate: bool, QID, LID):
         for i in cursor.fetchall():
             regrade(conn, cursor, isSourceUpdate, i[0], LID)
         return
-
 
     select_query = "SELECT Path FROM addfile WHERE LID = %s"
     cursor.execute(select_query, (LID,))
@@ -30,8 +31,11 @@ def regrade(conn, cursor, isSourceUpdate: bool, QID, LID):
 
     select_query = """
         SELECT 
-            `SID`, 
-            `SummitedFile` 
+            `UID`,
+            `SummitedFile`,
+            `Timestamp`,
+            `OriginalName`,
+            `CSYID`
         FROM 
             `submitted` 
         WHERE
@@ -40,53 +44,15 @@ def regrade(conn, cursor, isSourceUpdate: bool, QID, LID):
     cursor.execute(select_query, (QID))
     result = cursor.fetchall()
 
-    for SID, filepath in result:
-        err, data = grader.grade(source_path, filepath, addfile=addfiles, validate=False, check_keyword="ok", Qinfo=Qinfo)
-        if err:
-            # return jsonify({
-            #     'success': False,
-            #     'msg': f'There is a problem while grading.\n{data}',
-            #     'data': {}
-            # }), 200
-            data = [[0,1]]
+    cursor.execute('''
+        SELECT MaxScore
+        FROM question
+        WHERE QID = %s AND LID = %s
+    ''', (QID, LID))
+    MSC = cursor.fetchone()
+    if not MSC:
+        return
+    max_score = MSC[0] 
 
-        s, m = 0, 0
-
-        if len(data) == 1:
-            s += float(data[0][0])  # Ensure data is converted to float
-            m += float(data[0][1])  # Ensure data is converted to float
-        else:
-            for j in range(len(data)):
-                s += float(data[j][0])  # Ensure data is converted to float
-                m += float(data[j][1])  # Ensure data is converted to float
-
-        cursor.execute('''
-            SELECT MaxScore
-            FROM question
-            WHERE QID = %s AND LID = %s
-        ''', (QID, LID))
-        MSC = cursor.fetchone()
-        if not MSC:
-            return
-        max_score = MSC[0] 
-
-
-        # Check if m is zero to avoid division by zero
-        if m == 0:
-            Score = 0
-        else:
-            Score = float("{:.2f}".format((s / m) * float(max_score)))  # Ensure MaxScore is converted to float
-
-        # Define the insert or update query
-        upsert_query = """
-            UPDATE 
-                `submitted` 
-            SET 
-                `Score` = %s 
-            WHERE 
-                `SID` = %s
-        """
-
-        # Execute the query with the provided values
-        cursor.execute(upsert_query, (Score, SID))
-        conn.commit()
+    for UID, filepath, timestamp, OriginalFileName, CSYID in result:
+        executor.submit(gradeInBackground, source_path, addfiles, filepath, QID, max_score, UID, LID, timestamp, CSYID, OriginalFileName, Qinfo)
