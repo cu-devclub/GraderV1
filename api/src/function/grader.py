@@ -142,18 +142,14 @@ def __get_function_at_line(code, lineno):
     
 
 def __max_less_or_equal(lst, num):
-    print(lst)
-    print(num)
     return max((x for x in lst if x <= num), default=None)
 
 def __deflocate(code):
     def_loc = []
-    print(code)
     lines = code.split("\n")
     for i in range(len(lines)):
         if "def " in lines[i]:
             def_loc.append(i)
-    print(def_loc)
     return def_loc
             
 
@@ -170,7 +166,6 @@ def __fix_syntax_errors(code_list, submitName):
                 ast.parse(code)  # Try parsing the entire code
                 break  # No errors, move to next
             except SyntaxError as e:
-                print(e.msg)
                 errorMsg_arg = e.msg.split(" ")
                 lineno = e.lineno - 1 if "line" not in e.msg else int(errorMsg_arg[errorMsg_arg.index("line") + 1]) - 1  # Line number of error
                 
