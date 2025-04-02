@@ -168,6 +168,7 @@ def __fix_syntax_errors(code_list, submitName):
                 ast.parse(code)  # Try parsing the entire code
                 break  # No errors, move to next
             except SyntaxError as e:
+                print(e.msg)
                 errorMsg_arg = e.msg.split(" ")
                 lineno = e.lineno - 1 if "line" not in e.msg else int(errorMsg_arg[errorMsg_arg.index("line") + 1]) - 1  # Line number of error
 
