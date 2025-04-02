@@ -146,11 +146,12 @@ def __max_less_or_equal(lst, num):
 
 def __deflocate(code):
     def_loc = []
-
+    print(code)
     lines = code.split("\n")
     for i in range(len(lines)):
         if "def " in lines[i]:
             def_loc.append(i)
+    print(def_loc)
     return def_loc
             
 
