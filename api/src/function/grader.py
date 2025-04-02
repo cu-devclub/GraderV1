@@ -120,6 +120,8 @@ def __detect_tab_size(lines):
     return 4
 
 def __get_function_at_line(code, lineno):
+    if not lineno:
+        return None, (0, 0)
     """Finds and returns the function definition that starts at or before a given line number."""
     lines = code.splitlines()
     
@@ -144,7 +146,6 @@ def __max_less_or_equal(lst, num):
 
 def __deflocate(code):
     def_loc = []
-
     lines = code.split("\n")
     for i in range(len(lines)):
         if "def " in lines[i]:
@@ -167,7 +168,7 @@ def __fix_syntax_errors(code_list, submitName):
             except SyntaxError as e:
                 errorMsg_arg = e.msg.split(" ")
                 lineno = e.lineno - 1 if "line" not in e.msg else int(errorMsg_arg[errorMsg_arg.index("line") + 1]) - 1  # Line number of error
-
+                
                 func_code, (start, end) = __get_function_at_line(code, __max_less_or_equal(def_loc, lineno))
 
                 if func_code:
