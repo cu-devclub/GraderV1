@@ -140,6 +140,8 @@ def __get_function_at_line(code, lineno):
     
 
 def __max_less_or_equal(lst, num):
+    print(lst)
+    print(num)
     return max((x for x in lst if x <= num), default=None)
 
 def __deflocate(code):
