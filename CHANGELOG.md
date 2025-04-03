@@ -1,14 +1,23 @@
 
 # Change Log
 
-## [v1.6.8] - 2025-04-02
+## [v1.6.9] - 2025-04-04
  
 ### Added
 
 ### Changed
 
 ### Fixed
+    - unittest.mock make input not halt
+
+## [v1.6.8] - 2025-04-02
+ 
+### Added
+
+### Changed
     - regrade in background
+
+### Fixed
 
 ## [v1.6.7] - 2025-04-02
  
