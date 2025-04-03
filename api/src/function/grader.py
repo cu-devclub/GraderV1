@@ -6,6 +6,7 @@ import stopit
 import os
 import re
 import threading
+import sys
 
 import ast
 
@@ -146,6 +147,7 @@ def __max_less_or_equal(lst, num):
 
 def __deflocate(code):
     def_loc = []
+
     lines = code.split("\n")
     for i in range(len(lines)):
         if "def " in lines[i]:
@@ -157,10 +159,11 @@ def __deflocate(code):
 def __fix_syntax_errors(code_list, submitName):
     """Fix syntax errors one at a time until the script is valid."""
     fixed_list = []
-
     for code in code_list:
         tabSize = __detect_tab_size(code.split("\n"))
-        while True:
+        fixing_times = 0
+        while fixing_times < 100:
+            fixing_times += 1
             def_loc = __deflocate(code)
             try:
                 ast.parse(code)  # Try parsing the entire code
@@ -168,7 +171,7 @@ def __fix_syntax_errors(code_list, submitName):
             except SyntaxError as e:
                 errorMsg_arg = e.msg.split(" ")
                 lineno = e.lineno - 1 if "line" not in e.msg else int(errorMsg_arg[errorMsg_arg.index("line") + 1]) - 1  # Line number of error
-                
+
                 func_code, (start, end) = __get_function_at_line(code, __max_less_or_equal(def_loc, lineno))
 
                 if func_code:
@@ -220,22 +223,29 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
     score = []
 
 
-    def __safe_input(prompt):
+    def __safe_input(*prompt):
         result = [None]
+
+        # Check if input() is being mocked
+        if "unittest.mock" in sys.modules and hasattr(sys.modules["unittest.mock"], "patch"):
+            try:
+                return input(" ".join(prompt))  # Use mock input
+            except StopIteration:
+                raise Exception("Mock input has run out")  # Halt execution in case of mock exhaustion
 
         def get_input():
             try:
-                result[0] = input(prompt)
+                result[0] = input(" ".join(prompt))
             except EOFError:
-                result[0] = None
+                result[0] = ""
 
-        thread = threading.Thread(target=get_input)
+        thread = threading.Thread(target=get_input, daemon=True)
         thread.start()
         thread.join(timeout)
 
         if thread.is_alive():
-            return ""
-        
+            raise Exception("Input timed out")  # Halt execution if timeout occurs
+
         return result[0] if result[0] is not None else ""
 
 
@@ -253,7 +263,6 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
                 finalexec = [solutionSumed, Qinfo["Tester"], testcaseSumList[tcIndex]]
 
             output = io.StringIO()
-
             with stopit.ThreadingTimeout(timeout) as context_manager:
                 with redirect_stdout(output):
                     exec("\n\n".join(finalexec).replace("input(", "safe_input("), {"safe_input": __safe_input})
