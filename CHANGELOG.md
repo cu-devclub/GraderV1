@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.7.1] - 2025-08-28
+ 
+### Added
+
+### Changed
+    - version number on navbar
+
+### Fixed
+
 ## [v1.7.0] - 2025-08-28
  
 ### Added
