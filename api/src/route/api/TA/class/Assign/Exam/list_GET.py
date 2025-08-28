@@ -46,8 +46,8 @@ def main():
                 STD.UID, 
                 USR.Name, 
                 CASE 
-                    WHEN CO.UID IS NOT NULL THEN 1 
-                    ELSE 0 
+                    WHEN CO.UID IS NOT NULL AND CO.`LID` = LB.`LID` THEN 0 
+                    ELSE 1 
                 END AS checkedOut
             FROM 
                 student STD

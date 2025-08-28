@@ -22,6 +22,8 @@ def main():
 
     data = request.get_json()
     fileRequest = data.get('fileRequest')
+
+    public_ip = request.headers.get('X-Real-IP') or request.remote_addr
     
     # 0_<perm>_<ID>        <Additional file>
     # 1_<perm 0>_<QID>       <Question release>
@@ -67,7 +69,7 @@ def main():
                 'msg': 'You do not have access to this file.',
                 'data': ""
             }), 200
-        if not isAccess(g.db, cur, Email=Email, FID=FRL[2]):
+        if not isAccess(g.db, cur, public_ip, Email=Email, FID=FRL[2]):
             return jsonify({
                 'success': False,
                 'msg': 'You do not have access to this file.',
@@ -84,7 +86,7 @@ def main():
                 }), 200
             if checkPermQDown(FRL[2], Email, 1, cur):
                 editBefore = False
-            elif not isAccess(g.db, cur, Email=Email, QID=FRL[2]):
+            elif not isAccess(g.db, cur, public_ip, Email=Email, QID=FRL[2]):
                 return jsonify({
                     'success': False,
                     'msg': 'You do not have access to this file.',
@@ -112,7 +114,7 @@ def main():
                 'msg': 'You do not have access to this file.',
                 'data': ""
             }), 200
-        if not isAccess(g.db, cur, Email=Email, SID=FRL[2]):
+        if not isAccess(g.db, cur, public_ip, Email=Email, SID=FRL[2]):
             return jsonify({
                 'success': False,
                 'msg': 'You do not have access to this file.',

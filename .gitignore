@@ -40,3 +40,5 @@ scvrb.txt
 pjconfig/
 
 frontend/node_modules
+
+tmp/

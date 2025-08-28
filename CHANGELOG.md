@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.7.0] - 2025-08-28
+ 
+### Added
+    - Examination pin system
+
+### Changed
+
+### Fixed
+
 ## [v1.6.9] - 2025-04-04
  
 ### Added
