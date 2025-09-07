@@ -1,6 +1,13 @@
 
 # Change Log
 
+## [v1.7.2] - 2025-09-07
+ 
+### Added
+
+### Changed
+    - fix condition
+
 ## [v1.7.1] - 2025-08-28
  
 ### Added
