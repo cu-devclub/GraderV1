@@ -63,7 +63,7 @@ def main():
         }), 200
 
     # Column 2: True if lab contains CID and UID can link to student
-    cur.execute("SELECT CID, GID FROM student WHERE UID = %s", (Email.split('@')[0],))
+    cur.execute("SELECT CID, GID FROM student WHERE UID = %s AND CSYID = %s", (Email.split('@')[0], CSYID,))
     student_row = cur.fetchone()
     is_accessible = False
     if student_row:
@@ -75,7 +75,8 @@ def main():
             except Exception:
                 lab_cid_list = []
             is_accessible = student_cid in lab_cid_list
-        elif lab_gids:
+
+        if not is_accessible and lab_gids:
             try:
                 lab_gid_list = json.loads(lab_gids)
             except Exception:
