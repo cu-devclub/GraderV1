@@ -15,6 +15,7 @@ def main():
     UID = str(Email).split('@')[0]
     conn = get_db()
     cursor = conn.cursor()
+    public_ip = request.headers.get('X-Real-IP') or request.remote_addr
     try:
         LID = request.args.get('LID')
         CSYID = request.args.get('CSYID')
@@ -45,14 +46,15 @@ def main():
                 UID = %s AND
                 LID = %s AND
                 CSYID = %s AND
-                Type = %s
+                Type = %s AND
+                ip = %s
         """
-        cursor.execute(query, (UID, LID, CSYID, Type))
+        cursor.execute(query, (UID, LID, CSYID, Type, public_ip))
         data = cursor.fetchone()
         
         if data is None:
             ID = generateUUID()
-            cursor.execute("INSERT INTO ticket (ID, UID, CSYID, LID, Type) VALUES (%s, %s, %s, %s, %s);", (ID, UID, CSYID, LID, Type))
+            cursor.execute("INSERT INTO ticket (ID, UID, CSYID, LID, Type, ip) VALUES (%s, %s, %s, %s, %s, %s);", (ID, UID, CSYID, LID, Type, public_ip))
             conn.commit()
 
             event_name = f"delete_event_{ID}"  # Create a unique event name

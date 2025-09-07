@@ -2,7 +2,8 @@ from flask import request, jsonify
 
 from function.db import get_db
 from function.isCET import isCET
-from function.checkin import checkin
+# from function.checkin import checkin
+from function.checkout import checkout
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -33,7 +34,8 @@ def main():
         }), 200
 
     try:
-        err = checkin(conn, cursor, CSYID, UID, LID)
+        # err = checkin(conn, cursor, CSYID, UID, LID)
+        err = checkout(conn, cursor, CSYID, UID, LID)
         if err is not None:
             return jsonify({
                 'success': False,

@@ -1,6 +1,6 @@
 from function.isLock import isLock
 
-def isAccess(con, cur, UID=None, Email:str=None, LID=None, QID=None, FID=None, SID=None):
+def isAccess(con, cur, ip, UID=None, Email:str=None, LID=None, QID=None, FID=None, SID=None):
     if not (UID or Email):
         return False
     if not (LID or QID, FID, SID):
@@ -52,13 +52,13 @@ def isAccess(con, cur, UID=None, Email:str=None, LID=None, QID=None, FID=None, S
                 WHEN EXISTS (
                     SELECT 1
                     FROM checkout
-                    WHERE UID = %s AND LID = %s
+                    WHERE UID = %s AND LID = %s AND ip = %s
                 ) 
-                THEN 1 
-                ELSE 0 
+                THEN 0
+                ELSE 1 
             END AS access;
         """
-        cur.execute(que, (UID, LID))
+        cur.execute(que, (UID, LID, ip))
         # Fetch access result
         data = cur.fetchone()
 
