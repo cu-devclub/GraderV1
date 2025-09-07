@@ -27,6 +27,7 @@ def main():
     Email = get_jwt_identity()['email']
     conn = get_db()
     cursor = conn.cursor()
+    public_ip = request.headers.get('X-Real-IP') or request.remote_addr
     
     UID = Email.split('@')[0]
     uploaded_file = request.files["file"]
@@ -48,7 +49,7 @@ def main():
             'data': {}
         }), 400
 
-    if not isAccess(conn, cursor, Email=Email, QID=QID):
+    if not isAccess(conn, cursor, public_ip, Email=Email, QID=QID):
         return jsonify({
             'success': False,
             'msg': 'You do not have access to question.',

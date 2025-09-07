@@ -1,11 +1,12 @@
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy } from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { CodeSlash, FileEarmark, Download } from 'react-bootstrap-icons';
+import PinInput from '../../components/pin';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -19,6 +20,8 @@ function Lab() {
   const [classId,] = useState(sessionStorage.getItem("classId"))
 
   const [LabInfo, setLabInfo] = useState(null)
+
+  const [examPin, setExamPin] = useState("");
 
   const fetchData = async () => {
     try {
@@ -79,6 +82,79 @@ function Lab() {
     fetchData();
     fetchClass();
   }, [LID, classId, Email]);
+
+  useEffect(() => {
+    if (LabInfo && !LabInfo.Info.Access && LabInfo.Info.Exam && !LabInfo.Info.Lock) {
+      
+      withReactContent(Swal).fire({
+        title: `Examination pin`,
+        html: `
+          <center>
+        <br/>
+        <input id="swal-pin-input" type="text" maxlength="6" class="swal2-input" placeholder="Enter PIN" autocomplete="off" style="text-align:center;"/>
+        <br/>
+        <a>or</a>
+        <br/>
+        <br/>
+        <button type="button" id="swal-qr-btn" class="btn btn-info" style="color: white;">Enter with QR</button>
+        <br/>
+          </center>
+        `,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        allowEnterKey: true,
+        showCloseButton: false,
+        reverseButtons: true,
+        showCancelButton: true,
+        cancelButtonText: "Back",
+        confirmButtonText: "Check in",
+        didOpen: () => {
+          document.getElementById('swal-qr-btn').onclick = () => tiketQR(1);
+        },
+        preConfirm: () => {
+          const pin = document.getElementById('swal-pin-input').value;
+          return pin;
+        }
+      }).then(butClick => {
+        if(butClick.isConfirmed){
+          const pin = butClick.value;
+          fetch(`${process.env.REACT_APP_HOST}/ST/assignment/checkpin`, {
+            method: 'POST',
+            credentials: "include",
+            headers: {
+                "Content-type": "application/json; charset=UTF-8",
+                "Access-Control-Allow-Origin": "*",
+                "X-CSRF-TOKEN": Cookies.get("csrf_token")
+            },
+            body: JSON.stringify({ 
+              LID: LID,
+              Pin: pin
+            })
+          })
+          .then(response => response.json())
+          .then(data => {
+        if(data.success){
+          window.location.reload()
+          return
+        }
+        withReactContent(Swal).fire({
+          title: data.msg,
+          icon: "error"
+        }).then(butClick => {
+          if(butClick){
+            window.location.reload()
+          }
+        })
+          })
+          return
+        }
+        if(butClick.isDismissed && butClick.dismiss){
+          navigate("/Class")
+          return
+        }
+      })
+    }
+  }, [LabInfo])
 
   const downfile = async (t, i) => {
       fetch(`${process.env.REACT_APP_HOST}/glob/download`, {

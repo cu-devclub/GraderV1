@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import PinInput from '../../components/pin';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -33,6 +34,8 @@ function AssignCreate() {
   const [isGroup, setIsGroup] = useState(false)
   const [SelectList, setSelectList] = useState([]);
   const [Selected, setSelected] = useState([]);
+
+  const [examPin, setExamPin] = useState("");
 
   useEffect(() => {
     // Get list of sections
@@ -131,6 +134,9 @@ function AssignCreate() {
   };
 
   const isFormValid = () => {
+    if(isExam && examPin.length !== 6){
+      return false
+    }
     return (
       true &&
       labNum !== '' &&
@@ -211,6 +217,7 @@ function AssignCreate() {
           formData.append('LockOnDue', dueDateLock);
           formData.append('ShowOnLock', showLock);
           formData.append('isExam', isExam);
+          formData.append('ExamPin', examPin);
 
           formData.append('CSYID', classId);
 
@@ -350,13 +357,24 @@ function AssignCreate() {
                 <input type="number" min="1" className="form-control" id="inputQnum" value={totalQNum} onChange={handleTotalQNumChange} />
                 <input id={`showlock`} className="form-check-input" type="checkbox" checked={showLock} onChange={() => setShowLock(!showLock)}/>
                 <label className="form-check-label" htmlFor="showlock" style={{marginLeft: "0.3rem"}}>Show the score only after lab is locked.</label>
-                <br/>
+                {/* <br/>
                 <input id={`isExam`} className="form-check-input" type="checkbox" checked={isExam} onChange={() => {setIsExam(!isExam);}}/>
-                <label className="form-check-label" htmlFor="isExam" style={{marginLeft: "0.3rem"}}>Examination mode.</label>
+                <label className="form-check-label" htmlFor="isExam" style={{marginLeft: "0.3rem"}}>Examination mode.</label> */}
               </div>
             </div>
             <div className="row">
               <div className="col">
+                <div style={{marginLeft: "1rem"}}>
+                  <input id={`isExam`} className="form-check-input" type="checkbox" checked={isExam} onChange={() => {setIsExam(!isExam);}}/>
+                  <label className="form-check-label" htmlFor="isExam" style={{marginLeft: "0.3rem"}}>Examination mode.</label>
+                  <br/><br/>
+                  <div className='row'>
+                    <div className='col'>
+                      <PinInput values={examPin} onChangePin={setExamPin} disabled={!isExam}/>
+                    </div>
+                  </div>
+                  <br/><br/>
+                </div>
                 <div className="card">
                   <div className='card-header'>
                     <div className='row'>

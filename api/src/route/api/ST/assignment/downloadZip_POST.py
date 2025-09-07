@@ -18,6 +18,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @jwt_required()
 def main():
     Email = get_jwt_identity()['email']
+    public_ip = request.headers.get('X-Real-IP') or request.remote_addr
 
     data = request.get_json()
     LID = data.get('LID')
@@ -25,7 +26,7 @@ def main():
     conn = get_db()
     cur = conn.cursor()
 
-    if not isAccess(conn, cur, Email=Email, LID=LID):
+    if not isAccess(conn, cur, public_ip, Email=Email, LID=LID):
         return jsonify({
             'success': False,
             'msg': 'You do not have access to this file.',

@@ -10,6 +10,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @jwt_required()
 def main():
     Email = get_jwt_identity()['email']
+    public_ip = request.headers.get('X-Real-IP') or request.remote_addr
     try:
         
         # Params
@@ -76,7 +77,7 @@ def main():
             "Publish": datetime.strptime(str(lab_info_row[2]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
             "Due": datetime.strptime(str(lab_info_row[3]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
             "Late": bool(int(lab_info_row[4])),
-            "Access": isAccess(g.db, cur, Email=Email, LID=LID),
+            "Access": isAccess(g.db, cur, public_ip, Email=Email, LID=LID),
             "Exam": lab_info_row[5]
         }
 

@@ -222,6 +222,17 @@ def main():
 
         LID = form["LID"]
 
+        if form["isExam"] == 'true':
+            addpin = """
+                INSERT INTO exampin (LID, Pin, `Timestamp`)
+                VALUES (%s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    Pin = VALUES(Pin),
+                    `Timestamp` = VALUES(`Timestamp`)
+            """
+            cursor.execute(addpin, (LID, form["ExamPin"], datetime.now(gmt_timezone)))
+            conn.commit()
+
 
         # # check path
         # AddDirec = os.path.join(UPLOAD_FOLDER, form["CSYID"], LID)

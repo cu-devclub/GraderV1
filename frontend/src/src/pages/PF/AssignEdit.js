@@ -3,6 +3,7 @@ import withReactContent from 'sweetalert2-react-content';
 
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
+import PinInput from '../../components/pin';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash} from 'react-bootstrap-icons';
@@ -41,6 +42,9 @@ function AssignEdit() {
   const [SelectList, setSelectList] = useState([]);
   const [Selected, setSelected] = useState([]);
 
+  // exampin
+  const [examPin, setExamPin] = useState("");
+
   const fetchLab = async () => {
     try {
       const response = await fetch(`${host}/TA/class/Assign/data?LID=${LID}`, {
@@ -63,6 +67,7 @@ function AssignEdit() {
         setShowLock(data.data.ShowOnLock)
         setIsExam(data.data.isExam)
         setIsExamFromServ(data.data.isExam)
+        setExamPin(data.data.ExamPin)
 
         setIsGroup(data.data.IsGroup)
         setSelectList(data.data.SelectList)
@@ -102,6 +107,7 @@ function AssignEdit() {
           setShowLock(data.data.ShowOnLock)
           setIsExam(data.data.isExam)
           setIsExamFromServ(data.data.isExam)
+          setExamPin(data.data.ExamPin)
   
           setIsGroup(data.data.IsGroup)
           setSelectList(data.data.SelectList)
@@ -237,6 +243,7 @@ function AssignEdit() {
           formData.append("LOD", dueDateLock);
           formData.append('ShowOnLock', showLock);
           formData.append('isExam', isExam);
+          formData.append('ExamPin', examPin);
 
           formData.append('CSYID', classId);
 
@@ -301,6 +308,9 @@ function AssignEdit() {
   };
 
   const isFormValid = () => {
+    if (isExam && !/^\d{6}$/.test(examPin)) {
+      return false;
+    }
     return (
       true &&
       labNum !== '' &&
@@ -533,6 +543,23 @@ function AssignEdit() {
       })
     }
     setShowModal(false)
+  }
+
+  const handleShowPin = async () => {
+    withReactContent(Swal).fire({
+      title: `Examination pin`,
+      html: `<div style="display:flex;justify-content:center;align-items:center;height:40vh;">
+           <h1 style="font-size:8rem;">${examPin}</h1>
+         </div>`,
+      backdrop: true,
+      allowOutsideClick: false,
+      allowEscapeKey: true,
+      showConfirmButton: true,
+      width: '80vw',
+      customClass: {
+      popup: 'swal2-cover-page'
+      }
+    })
   }
 
   const delfile = async (i, name) => {
@@ -791,13 +818,24 @@ function AssignEdit() {
                 <input type="number" min="1" className="form-control" id="inputQnum" value={totalQNum} onChange={handleTotalQNumChange} />
                 <input id={`showlock`} className="form-check-input" type="checkbox" checked={showLock} onChange={() => setShowLock(!showLock)}/>
                 <label className="form-check-label" htmlFor="showlock" style={{marginLeft: "0.3rem"}}>Show the score only after lab is locked.</label>
-                <br/>
-                <input id={`isExam`} className="form-check-input" type="checkbox" checked={isExam} onChange={() => {setIsExam(!isExam);}}/>
-                <label className="form-check-label" htmlFor="isExam" style={{marginLeft: "0.3rem"}}>Examination mode.</label>
               </div>
             </div>
             <div className="row">
               <div className="col">
+                <div style={{marginLeft: "1rem"}}>
+                  <input id={`isExam`} className="form-check-input" type="checkbox" checked={isExam} onChange={() => {setIsExam(!isExam);}}/>
+                  <label className="form-check-label" htmlFor="isExam" style={{marginLeft: "0.3rem"}}>Examination mode.</label>
+                  <br/><br/>
+                  <div className='row'>
+                    <div className='col'>
+                      <PinInput values={examPin} onChangePin={setExamPin} disabled={!isExam}/>
+                    </div>
+                    <div className='col'>
+                      <button type="button" className="btn btn-primary" onClick={handleShowPin} disabled={!isExam}>Show pin</button>
+                    </div>
+                  </div>
+                  <br/><br/>
+                </div>
                 <div className="card">
                   <div className='card-header'>
                     <div className='row'>

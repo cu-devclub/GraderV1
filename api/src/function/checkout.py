@@ -16,7 +16,8 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
         
         query = """ 
             SELECT
-                ID
+                ID,
+                ip
             FROM
                 ticket
             WHERE 
@@ -25,7 +26,9 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
 
         cursor.execute(query, (UID, LID, CSYID))
         data = cursor.fetchone()
+        public_ip = ''
         if data is not None:
+            public_ip = data[1]
             query = "DELETE FROM ticket WHERE ID = %s;"
             cursor.execute(query, (data[0]))
             conn.commit()
@@ -35,8 +38,8 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
             cursor.execute(query)
             conn.commit()
 
-        query = "INSERT INTO `checkout` (`UID`, `LID`, `CSYID`) VALUES (%s, %s, %s);"
-        cursor.execute(query, (UID, LID, CSYID))
+        query = "INSERT INTO `checkout` (`UID`, `LID`, `CSYID`, ip) VALUES (%s, %s, %s, %s);"
+        cursor.execute(query, (UID, LID, CSYID, public_ip))
         conn.commit()
 
     except Exception as e:
