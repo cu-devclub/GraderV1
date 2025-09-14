@@ -1,11 +1,22 @@
 
 # Change Log
 
+## [v1.7.3] - 2025-09-14
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - form validate conditiob
+
 ## [v1.7.2] - 2025-09-07
  
 ### Added
 
 ### Changed
+
+### Fixed
     - fix condition
 
 ## [v1.7.1] - 2025-08-28
