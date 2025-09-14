@@ -308,7 +308,7 @@ function AssignEdit() {
   };
 
   const isFormValid = () => {
-    if (isExam && !/^\d{6}$/.test(examPin)) {
+    if (isExam && !/^([A-Za-z0-9]){6}$/.test(examPin)) {
       return false;
     }
     return (
