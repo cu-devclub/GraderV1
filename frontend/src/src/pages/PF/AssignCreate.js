@@ -134,8 +134,8 @@ function AssignCreate() {
   };
 
   const isFormValid = () => {
-    if(isExam && examPin.length !== 6){
-      return false
+    if (isExam && !/^([A-Za-z0-9]){6}$/.test(examPin)) {
+      return false;
     }
     return (
       true &&
