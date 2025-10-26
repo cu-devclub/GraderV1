@@ -1,6 +1,17 @@
 
 # Change Log
 
+## [v1.7.4] - 2025-10-27
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - QR ticket checking system 1 <-> 0
+
+# Change Log
+
 ## [v1.7.3] - 2025-09-14
  
 ### Added
