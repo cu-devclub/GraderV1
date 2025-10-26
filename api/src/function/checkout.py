@@ -21,7 +21,7 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
             FROM
                 ticket
             WHERE 
-                UID = %s AND LID = %s AND CSYID = %s AND Type = 0
+                UID = %s AND LID = %s AND CSYID = %s AND Type = 1
         """
 
         cursor.execute(query, (UID, LID, CSYID))
