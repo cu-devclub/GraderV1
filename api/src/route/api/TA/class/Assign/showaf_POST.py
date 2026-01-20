@@ -21,7 +21,7 @@ def main():
 
     try:
         fileRequest = int(fileRequest)
-    except:
+    except Exception:
         return jsonify({
             'success': False,
             'msg': 'fileRequest is not valid',

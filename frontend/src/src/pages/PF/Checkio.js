@@ -257,7 +257,26 @@ function Checkio() {
                         <th scope="row">{index + 1}</th>
                         <td>{element["UID"]}</td>
                         <td>{element["Name"]}</td>
-                        <td className='text-center'>{element["checkedOut"] === 1 ? <a style={{color: "rgb(137, 32, 32)"}}><PersonSlash/></a> : <a style={{color: "rgb(61, 146, 35)"}}><PersonCheck/></a>}</td>
+                        {/* <td className='text-center'>{element["checkedOut"] === 1 ? <a style={{color: "rgb(137, 32, 32)"}}><PersonSlash/></a> : <a style={{color: "rgb(61, 146, 35)"}}><PersonCheck/></a>}</td> */}
+                        <td className="text-center">
+                            {element.checkedOut === 1 ? (
+                                <button
+                                type="button"
+                                style={{ color: "rgb(137, 32, 32)", background: "none", border: "none" }}
+                                aria-label="Checked out"
+                                >
+                                <PersonSlash />
+                                </button>
+                            ) : (
+                                <button
+                                type="button"
+                                style={{ color: "rgb(61, 146, 35)", background: "none", border: "none" }}
+                                aria-label="Available"
+                                >
+                                <PersonCheck />
+                                </button>
+                            )}
+                        </td>
                         <td className='text-center'>{element["checkedOut"] === 1 ? <button type="button" class="btn btn-success" onClick={() => {rqchkio({Type: 1, UID: element["UID"], Name: element["Name"]})}}><BoxArrowInRight/></button> : <button type="button" class="btn btn-danger" onClick={() => {rqchkio({Type: 0, UID: element["UID"], Name: element["Name"]})}}><BoxArrowLeft/></button>}</td>
                       </tr>
                   ))
