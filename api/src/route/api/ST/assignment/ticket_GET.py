@@ -21,7 +21,7 @@ def main():
         CSYID = request.args.get('CSYID')
         try:
             Type = int(request.args.get('Type'))
-        except:
+        except Exception:
             return jsonify({
                 'success': False,
                 'msg': 'Please contact admin',

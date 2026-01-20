@@ -1,12 +1,12 @@
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content';
 
-import React, { useState, useEffect, lazy } from 'react';
+import React, { useState, useEffect, useCallback} from 'react';
 import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { CodeSlash, FileEarmark, Download } from 'react-bootstrap-icons';
-import PinInput from '../../components/pin';
+// import PinInput from '../../components/pin';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -21,9 +21,9 @@ function Lab() {
 
   const [LabInfo, setLabInfo] = useState(null)
 
-  const [examPin, setExamPin] = useState("");
+  // const [examPin, setExamPin] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const response = await fetch(`${host}/ST/assignment/specific?LID=${LID}`, {
         method: "GET",
@@ -39,7 +39,7 @@ function Lab() {
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  };
+  }, [LID]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -82,6 +82,46 @@ function Lab() {
     fetchData();
     fetchClass();
   }, [LID, classId, Email]);
+
+  const tiketQR = useCallback(async (Type) => {
+    try{
+      const response = await fetch(`${host}/ST/assignment/ticket?LID=${LID}&CSYID=${classId}&Type=${Type}`, {
+        method: 'GET',
+        credentials: "include",
+        headers: {
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+        }
+      })
+      const Data = await response.json()
+      if (Data.success){
+        withReactContent(Swal).fire({
+            title: Type === 0 ? "Request to leave" : "Request to enter",
+            // text: Data['data']['msg'],
+            // icon: "success"
+            html: `
+              <img src="${Data['data']['qr']}">
+              <a style="color:rgb(160, 160, 160)">${Data['data']['ID']}</a><br/>
+              <a><b>Student ID:</b> ${Email.split("@")[0]}</a>
+            `,
+            showCloseButton: true,
+            showConfirmButton: false,
+        }).then(ok => {
+          fetchData()
+        });
+      }else{
+        withReactContent(Swal).fire({
+          title: Data.msg,
+          icon: Data.data
+        })
+      }
+    }catch (error) {
+      withReactContent(Swal).fire({
+          title: "Please contact admin!",
+          text: error,
+          icon: "error"
+      })
+    }
+  }, [Email, LID, classId, fetchData]);
 
   useEffect(() => {
     if (LabInfo && !LabInfo.Info.Access && LabInfo.Info.Exam && !LabInfo.Info.Lock) {
@@ -154,7 +194,7 @@ function Lab() {
         }
       })
     }
-  }, [LabInfo])
+  }, [LabInfo, LID, navigate, tiketQR]);
 
   const downfile = async (t, i) => {
       fetch(`${process.env.REACT_APP_HOST}/glob/download`, {
@@ -255,46 +295,6 @@ function Lab() {
             }
           }
       });
-    }catch (error) {
-      withReactContent(Swal).fire({
-          title: "Please contact admin!",
-          text: error,
-          icon: "error"
-      })
-    }
-  }
-
-  const tiketQR = async (Type) => {
-    try{
-      const response = await fetch(`${host}/ST/assignment/ticket?LID=${LID}&CSYID=${classId}&Type=${Type}`, {
-        method: 'GET',
-        credentials: "include",
-        headers: {
-            "X-CSRF-TOKEN": Cookies.get("csrf_token")
-        }
-      })
-      const Data = await response.json()
-      if (Data.success){
-        withReactContent(Swal).fire({
-            title: Type === 0 ? "Request to leave" : "Request to enter",
-            // text: Data['data']['msg'],
-            // icon: "success"
-            html: `
-              <img src="${Data['data']['qr']}">
-              <a style="color:rgb(160, 160, 160)">${Data['data']['ID']}</a><br/>
-              <a><b>Student ID:</b> ${Email.split("@")[0]}</a>
-            `,
-            showCloseButton: true,
-            showConfirmButton: false,
-        }).then(ok => {
-          fetchData()
-        });
-      }else{
-        withReactContent(Swal).fire({
-          title: Data.msg,
-          icon: Data.data
-        })
-      }
     }catch (error) {
       withReactContent(Swal).fire({
           title: "Please contact admin!",
