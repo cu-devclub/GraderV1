@@ -48,7 +48,7 @@ def main():
     
     try:
         FRL = [int(i) for i in FRL]
-    except:
+    except Exception:
         return jsonify({
             'success': False,
             'msg': 'fileRequest is not valid',

@@ -1,6 +1,17 @@
 
 # Change Log
 
+## [v1.7.5] - 2026-01-20
+ 
+### Added
+
+### Changed
+    - update python to 3.13
+    - fix warning on frontend
+    - update authentication service  dependencies
+
+### Fixed
+
 ## [v1.7.4] - 2025-10-27
  
 ### Added

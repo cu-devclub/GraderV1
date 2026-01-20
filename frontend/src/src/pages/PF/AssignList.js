@@ -64,7 +64,7 @@ function AssignList() {
 
     fetchClass();
     fetchData()
-  }, [classId]);
+  }, [classId, navigate]);
 
   const toggleLock = async (event, LID) => {
     fetch(`${process.env.REACT_APP_HOST}/TA/class/Assign/Lock`, {
