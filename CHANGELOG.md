@@ -1,6 +1,13 @@
 
 # Change Log
 
+## [v1.7.6] - 2026-01-31
+ 
+### Added
+
+### Changed
+    - no pin after 30 mins
+
 ## [v1.7.5] - 2026-01-20
  
 ### Added
