@@ -34,7 +34,7 @@ def main():
     tz = pytz.timezone('Asia/Bangkok')
     now = datetime.now(tz)
 
-    cur.execute("SELECT l.Due, l.CID, l.GID, l.Exam, ep.Pin, l.CSYID FROM lab l LEFT JOIN exampin ep ON ep.LID = l.LID WHERE l.LID = %s", (LID,))
+    cur.execute("SELECT l.Due, l.CID, l.GID, l.Exam, ep.Pin, l.CSYID, l.Publish FROM lab l LEFT JOIN exampin ep ON ep.LID = l.LID WHERE l.LID = %s", (LID,))
     lab_row = cur.fetchone()
     if not lab_row:
         return jsonify({
@@ -43,13 +43,15 @@ def main():
             'data': ""
         }), 200
 
-    due, lab_cids, lab_gids, isExam, exam_pin, CSYID = lab_row
+    due, lab_cids, lab_gids, isExam, exam_pin, CSYID, publish = lab_row
     if not isExam:
         return jsonify({
             'success': False,
             'msg': 'Lab is not on examination mode.',
             'data': ""
         }), 200
+
+    
 
     is_due_passed = False
     if due:
@@ -123,6 +125,16 @@ def main():
             'msg': 'Success',
             'data': ""
         }), 200
+
+    # Check if publish time is older than 30 minutes
+    if publish:
+        time_diff = (now - publish).total_seconds() / 60.0
+        if time_diff > 30:
+            return jsonify({
+                'success': False,
+                'msg': 'Pin is no longer available please use QR instead.',
+                'data': ""
+            }), 200
 
     # if not update attemp
     if attempt_count == 0:
