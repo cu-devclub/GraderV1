@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.7.8] - 2026-02-01
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - change str() to json.dumps
+
 ## [v1.7.7] - 2026-02-01
  
 ### Added
