@@ -1,12 +1,23 @@
 
 # Change Log
 
+## [v1.7.7] - 2026-02-01
+ 
+### Added
+
+### Changed
+
+### Fixed
+    - Edit assignment, datatype of question info not match with database
+
 ## [v1.7.6] - 2026-01-31
  
 ### Added
 
 ### Changed
     - no pin after 30 mins
+
+### Fixed
 
 ## [v1.7.5] - 2026-01-20
  
