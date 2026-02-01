@@ -157,7 +157,7 @@ def update_database(conn, cursor, questions, qnum, source_files, release_files, 
 
             addfiles = [row[0] for row in result]
 
-            Qinfo = grader.QinfoGenerate(source_path, addfile=addfiles)
+            Qinfo = str(grader.QinfoGenerate(source_path, addfile=addfiles))
 
             # Insert new question
             cursor.execute('''
