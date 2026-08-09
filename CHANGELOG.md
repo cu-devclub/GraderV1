@@ -1,6 +1,15 @@
 
 # Change Log
 
+## [v1.7.9] - 2026-08-10
+ 
+### Added
+
+### Changed
+    - improve get score
+
+### Fixed
+
 ## [v1.7.8] - 2026-02-01
  
 ### Added
