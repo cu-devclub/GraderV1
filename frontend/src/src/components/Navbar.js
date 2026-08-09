@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 function Navbar() {
         const handleButtonClick = () => {};
-        const [version,] = useState("1.7.8")
+        const [version,] = useState("1.7.9")
       
         const [showModal, setShowModal] = useState(false);
       
