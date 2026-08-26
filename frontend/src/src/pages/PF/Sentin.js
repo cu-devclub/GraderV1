@@ -71,12 +71,46 @@ function Sentin() {
   };
 
   const [openDropdown, setOpenDropdown] = useState({});
+  const [studentSMT, setStudentSMT] = useState({});
+  const [loadingSMT, setLoadingSMT] = useState({});
 
-  const handleToggleDropdown = (index) => {
+  const handleToggleDropdown = async (uid) => {
+    const nextState = !openDropdown[uid];
     setOpenDropdown((prevState) => ({
       ...prevState,
-      [index]: !prevState[index],
+      [uid]: nextState,
     }));
+
+    if (nextState && !studentSMT[uid]) {
+      setLoadingSMT((prev) => ({ ...prev, [uid]: true }));
+      try {
+        const response = await fetch(`${host}/TA/student/score?UID=${uid}&LID=${LID}`, {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*",
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+          }
+        });
+        const data = await response.json();
+        if (data.success) {
+          setStudentSMT((prev) => ({
+            ...prev,
+            [uid]: data.data.SMT || data.data
+          }));
+        } else {
+          withReactContent(Swal).fire({
+            title: data.msg || "Failed to fetch student score",
+            icon: "error"
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching student score:', error);
+      } finally {
+        setLoadingSMT((prev) => ({ ...prev, [uid]: false }));
+      }
+    }
   };
 
   const loadSub = async (SID) => {
@@ -235,7 +269,7 @@ function Sentin() {
                   Scores["Students"].filter(element => (
                     (element["UID"] + element["Name"]).toLowerCase().includes(searchQuery.toLowerCase())
                   )).map((element, index) => (
-                    <React.Fragment key={index}>
+                    <React.Fragment key={element["UID"] || index}>
                       <tr>
                         <th scope="row">{index + 1}</th>
                         <td>{element["UID"]}</td>
@@ -244,40 +278,43 @@ function Sentin() {
                           <button 
                               className="btn btn-secondary dropdown-toggle" 
                               type="button" 
-                              onClick={() => handleToggleDropdown(index)}
-                              aria-expanded={openDropdown[index] || false}
+                              onClick={() => handleToggleDropdown(element["UID"])}
+                              aria-expanded={openDropdown[element["UID"]] || false}
                             >
                             {element["AllScore"]}/{Scores.AllMaxScore}
                           </button>
                         </td>
                       </tr>
-                      {openDropdown[index] && (
+                      {openDropdown[element["UID"]] && (
                         <tr>
                           <td colSpan="5">
-                            <table className="table" style={{margin: "0px"}}>
-                              <thead>
-                              </thead>
-                              <tbody>
-                                {element["SMT"].map((smt, smtIndex) => (
-                                  <tr key={smtIndex}>
-                                    <div className='row' style={{color: `${smt["Late"] ? 'red' : 'black'}`}}>
-                                      <div className='col'>
-                                        Q{smtIndex + 1}: {smt["Time"]}
+                            {loadingSMT[element["UID"]] ? (
+                              <div className="text-center p-2">Loading...</div>
+                            ) : (studentSMT[element["UID"]] || element["SMT"]) && (studentSMT[element["UID"]] || element["SMT"]).length > 0 ? (
+                              <table className="table" style={{margin: "0px"}}>
+                                <thead>
+                                </thead>
+                                <tbody>
+                                  {(studentSMT[element["UID"]] || element["SMT"]).map((smt, smtIndex) => (
+                                    <tr key={smtIndex}>
+                                      <div className='row' style={{color: `${smt["Late"] ? 'red' : 'black'}`}}>
+                                        <div className='col'>
+                                          Q{smtIndex + 1}: {smt["Time"]}
+                                        </div>
+                                        <div className='col-2'>
+                                          {smt["Score"]}/{smt["MaxScore"]}
+                                        </div>
+                                        <div className='col-1'>
+                                          {smt["SID"] > -1 ? <button type="button" className="btn btn-outline-dark" onClick={() => {loadSub(smt["SID"])}}><Download /></button>: ""}
+                                        </div>
                                       </div>
-                                      <div className='col-2'>
-                                        {smt["Score"]}/{smt["MaxScore"]}
-                                      </div>
-                                      <div className='col-1'>
-                                        {smt["SID"] > -1 ? <button type="button" class="btn btn-outline-dark" onClick={() => {loadSub(smt["SID"])}}><Download /></button>: ""}
-                                      </div>
-                                    </div>
-                                    {/* <td style={{color: `${smt["Late"] ? 'red' : 'black'}`}}>Q{smtIndex + 1}: {smt["Time"]}</td>
-                                    <td style={{color: `${smt["Late"] ? 'red' : 'black'}`}}>{smt["Score"]}/{smt["MaxScore"]}</td>
-                                    <td style={{color: `${smt["Late"] ? 'red' : 'black'}`}}><button type="button" class="btn btn-outline-dark" onClick={() => {loadSub(smt["SID"])}}><Download /></button></td> */}
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            ) : (
+                              <div className="text-center p-2">No submission data</div>
+                            )}
                           </td>
                         </tr>
                       )}

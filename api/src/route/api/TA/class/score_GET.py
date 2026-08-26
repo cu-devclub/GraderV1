@@ -94,55 +94,24 @@ def main():
         gid_condition = "ST.GID IN (%s)" % ','.join(map(str, GID_list)) if GID_list else "1=0"
 
         query = f"""
-            SELECT ST.UID, ST.CID, ST.GID, US.Name
+            SELECT ST.UID, US.Name, COALESCE(SUM(SMT.Score), 0) AS AllScore
             FROM student ST
             JOIN user US ON ST.UID = US.UID
-            WHERE {cid_condition} OR {gid_condition}
+            LEFT JOIN submitted SMT ON ST.UID = SMT.UID AND SMT.LID = %s
+            WHERE ({cid_condition} OR {gid_condition}) AND ST.CSYID = %s
+            GROUP BY ST.UID, US.Name
+            ORDER BY ST.UID ASC
         """
-        cursor.execute(query)
+        cursor.execute(query, (LID, data[0]))
         students = cursor.fetchall()
 
         student_data = []
         for student in students:
-            UID, CID, GID, Name = student
-            student_smt = []
-            all_score = 0
-
-            for question in questions:
-                QID, MaxScore = question
-
-                query = """
-                    SELECT Score, Timestamp, SID
-                    FROM submitted
-                    WHERE UID = %s AND QID = %s AND LID = %s
-                """
-                cursor.execute(query, (UID, QID, LID))
-                submission = cursor.fetchone()
-                score = submission[0] if submission and submission[0] is not None else 0
-                timestamp = submission[1] if submission else None
-                SID = submission[2] if submission else -1
-
-                if timestamp:
-                    timestamp_str = timestamp.strftime("%d/%m/%Y %H:%M")
-                    late = timestamp > due_date
-                else:
-                    timestamp_str = "-"
-                    late = datetime.now() > due_date
-
-                student_smt.append({
-                    "Time": timestamp_str,
-                    "Late": late,
-                    "Score": "{:.2f}".format(score),
-                    "MaxScore": int(MaxScore),
-                    "SID": SID
-                })
-                all_score += score
-
+            UID, Name, all_score = student
             student_data.append({
-                "UID": UID,
+                "AllScore": "{:.2f}".format(all_score),
                 "Name": Name,
-                "SMT": student_smt,
-                "AllScore": "{:.2f}".format(all_score)
+                "UID": UID
             })
 
         return jsonify({
