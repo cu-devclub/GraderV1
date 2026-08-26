@@ -1,6 +1,25 @@
 
 # Change Log
 
+## [v1.8.1] - 2026-08-27
+ 
+### Added
+    - new route TA/student/score to get student submissions on demand
+
+### Changed
+    - improve sent in page performance and optimize TA/class/score
+
+### Fixed
+
+## [v1.8.0] - 2026-08-26
+ 
+### Added
+    - checkout all
+
+### Changed
+
+### Fixed
+
 ## [v1.7.9] - 2026-08-10
  
 ### Added

@@ -123,8 +123,15 @@ mount_info = []
 # loop add route to api server
 for i in gbl['list_route']:
     x = i.split("_")
-    app.add_url_rule('/'+x[0].replace('route.', '').replace('.', '/'), i, gbl[i].main, methods=x[1].split("-"))
-    mount_info.append([Fore.GREEN + x[0], Fore.CYAN + x[1], Fore.YELLOW + x[0].replace('route.', '').replace('.', '/') + Style.RESET_ALL])
+    route_path = '/'+x[0].replace('route.', '').replace('.', '/')
+    app.add_url_rule(route_path, i, gbl[i].main, methods=x[1].split("-"))
+    mount_info.append([Fore.GREEN + x[0], Fore.CYAN + x[1], Fore.YELLOW + route_path + Style.RESET_ALL])
+    if '/Student/' in route_path or route_path.endswith('/Student'):
+        alt_path = route_path.replace('/Student', '/student')
+        app.add_url_rule(alt_path, i + "_alt_student", gbl[i].main, methods=x[1].split("-"))
+    elif '/student/' in route_path or route_path.endswith('/student'):
+        alt_path = route_path.replace('/student', '/Student')
+        app.add_url_rule(alt_path, i + "_alt_Student", gbl[i].main, methods=x[1].split("-"))
 
 print(tabulate(mount_info, headers=['Route', 'Method', "Path"]))
 
