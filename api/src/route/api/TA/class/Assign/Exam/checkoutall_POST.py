@@ -40,22 +40,7 @@ def main():
         }), 200
     
     try:
-        sql = """
-            INSERT IGNORE INTO checkout (UID, LID, CSYID, ip)
-            SELECT 
-                STD.UID, 
-                LB.LID, 
-                STD.CSYID, 
-                ''
-            FROM 
-                student STD
-            JOIN 
-                lab LB ON LB.CSYID = STD.CSYID
-            WHERE 
-                LB.LID = %s
-                AND (JSON_CONTAINS(LB.CID, CAST(STD.CID AS JSON)) 
-                    OR JSON_CONTAINS(LB.GID, CAST(STD.GID AS JSON)));
-        """
+        sql = "DELETE FROM checkout WHERE LID = %s"
         cursor.execute(sql, (LID,))
         cursor.execute("DELETE FROM ticket WHERE LID = %s;", (LID,))
         conn.commit()
