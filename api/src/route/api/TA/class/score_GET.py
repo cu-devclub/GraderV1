@@ -97,12 +97,12 @@ def main():
             SELECT ST.UID, US.Name, COALESCE(SUM(SMT.Score), 0) AS AllScore
             FROM student ST
             JOIN user US ON ST.UID = US.UID
-            LEFT JOIN submitted SMT ON ST.UID = SMT.UID AND SMT.LID = %s
-            WHERE ({cid_condition} OR {gid_condition}) AND ST.CSYID = %s
+            LEFT JOIN submitted SMT ON ST.UID = SMT.UID AND (SMT.LID = %s OR SMT.QID IN (SELECT QID FROM question WHERE LID = %s))
+            WHERE {cid_condition} OR {gid_condition}
             GROUP BY ST.UID, US.Name
             ORDER BY ST.UID ASC
         """
-        cursor.execute(query, (LID, data[0]))
+        cursor.execute(query, (LID, LID))
         students = cursor.fetchall()
 
         student_data = []
