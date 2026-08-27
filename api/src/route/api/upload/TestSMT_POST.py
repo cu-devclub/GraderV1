@@ -266,7 +266,9 @@ def main():
             cursor.execute(Qinfo_query, (json.dumps(Qinfo), QID))
             conn.commit()
 
+        print(f"Grading UID: {UID}, LID: {LID}, QID: {QID}, File: {filepath}", flush=True)
         err, data = grader.grade(Source, filepath, addfile=addfiles, validate=False, check_keyword="ok", timeout=2, Qinfo=Qinfo)
+        print(f"grade result UID: {UID}, LID: {LID}, QID: {QID}: {err} {data}", flush=True)
         if err:
             return jsonify({
                 'success': False,
