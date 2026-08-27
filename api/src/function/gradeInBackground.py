@@ -14,13 +14,14 @@ def gradeInBackground(Source, addfiles, filepath, QID, MaxScore, UID, LID, uploa
             cursor.execute(Qinfo_query, (json.dumps(Qinfo), QID))
             conn.commit()
     
-        print("Grading", filepath)
+        print(f"Grading UID: {UID}, LID: {LID}, QID: {QID}, File: {filepath}")
+        sys.stdout.flush()
         err, data = grader.grade(Source, filepath, addfile=addfiles, validate=False, check_keyword="ok", timeout=2, Qinfo=Qinfo)
-        print(data)
         if err:
+            print(f"grade error UID: {UID}, LID: {LID}, QID: {QID}: {data}")
             data = [[0, 1]]
     
-        print("grade result:", err, data)
+        print(f"grade result UID: {UID}, LID: {LID}, QID: {QID}: {err} {data}")
         sys.stdout.flush()
         
         s, m = 0, 0
@@ -52,9 +53,14 @@ def gradeInBackground(Source, addfiles, filepath, QID, MaxScore, UID, LID, uploa
     
         # Execute the query with the provided values
         cursor.execute(upsert_query, (UID, LID, QID, filepath, Score, upload_time, CSYID, OriginalFileName))
+        conn.commit()
     except Exception as e:
-        print(e)
+        print(f"Error in gradeInBackground UID: {UID}, LID: {LID}, QID: {QID}: {e}")
         sys.stdout.flush()
-    conn.commit()
-    conn.close()
+    finally:
+        if 'conn' in locals() and conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
     return
