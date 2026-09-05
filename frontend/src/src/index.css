@@ -209,3 +209,30 @@ code {
     transform: rotate(-90deg);
     white-space: nowrap;
 }
+
+/* ----- start examination pin modal ----- */
+.exam-pin-modal-popup {
+    border-radius: 14px !important;
+    padding: 24px 20px !important;
+    max-width: 400px !important;
+}
+
+.exam-pin-box {
+    width: 44px;
+    height: 52px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.exam-pin-box:focus {
+    border-color: #86b7fe !important;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+}
+
+.exam-pin-box.is-invalid {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+/* ----- end examination pin modal ----- */
+
