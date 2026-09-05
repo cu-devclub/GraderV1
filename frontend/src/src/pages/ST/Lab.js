@@ -125,74 +125,214 @@ function Lab() {
 
   useEffect(() => {
     if (LabInfo && !LabInfo.Info.Access && LabInfo.Info.Exam && !LabInfo.Info.Lock) {
-      
+      let isActionTriggered = false;
+
+      const submitPin = (pin) => {
+        if (!pin || pin.length !== 6) return;
+        isActionTriggered = true;
+        const confirmBtn = document.getElementById('swal-checkin-btn');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="width: 16px; height: 16px; border-width: 2px;"></span>
+            Checking...
+          `;
+        }
+        for (let i = 0; i < 6; i++) {
+          const el = document.getElementById(`swal-pin-${i}`);
+          if (el) el.disabled = true;
+        }
+
+        fetch(`${process.env.REACT_APP_HOST}/ST/assignment/checkpin`, {
+          method: 'POST',
+          credentials: "include",
+          headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            "Access-Control-Allow-Origin": "*",
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+          },
+          body: JSON.stringify({ 
+            LID: LID,
+            Pin: pin
+          })
+        })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            window.location.reload();
+            return;
+          }
+          withReactContent(Swal).fire({
+            title: data.msg,
+            icon: "error"
+          }).then(butClick => {
+            if (butClick) {
+              window.location.reload();
+            }
+          });
+        })
+        .catch(error => {
+          console.error('Checkin error:', error);
+          withReactContent(Swal).fire({
+            title: "Network error",
+            text: "Failed to connect to server.",
+            icon: "error"
+          });
+        });
+      };
+
       withReactContent(Swal).fire({
         title: `Examination pin`,
         html: `
-          <center>
-        <br/>
-        <input id="swal-pin-input" type="text" maxlength="6" class="swal2-input" placeholder="Enter PIN" autocomplete="off" style="text-align:center;"/>
-        <br/>
-        <a>or</a>
-        <br/>
-        <br/>
-        <button type="button" id="swal-qr-btn" class="btn btn-info" style="color: white;">Enter with QR</button>
-        <br/>
-          </center>
+          <div class="pt-2">
+            <div class="d-flex justify-content-center gap-2 mb-3">
+              <input id="swal-pin-0" type="text" maxlength="1" class="form-control text-center exam-pin-box" autocomplete="off" />
+              <input id="swal-pin-1" type="text" maxlength="1" class="form-control text-center exam-pin-box" autocomplete="off" />
+              <input id="swal-pin-2" type="text" maxlength="1" class="form-control text-center exam-pin-box" autocomplete="off" />
+              <input id="swal-pin-3" type="text" maxlength="1" class="form-control text-center exam-pin-box" autocomplete="off" />
+              <input id="swal-pin-4" type="text" maxlength="1" class="form-control text-center exam-pin-box" autocomplete="off" />
+              <input id="swal-pin-5" type="text" maxlength="1" class="form-control text-center exam-pin-box" autocomplete="off" />
+            </div>
+
+            <button type="button" id="swal-checkin-btn" class="btn btn-primary w-100 py-2">Check in</button>
+
+            <div class="d-flex align-items-center my-3">
+              <div class="flex-grow-1 border-top"></div>
+              <span class="px-3 text-muted small">or</span>
+              <div class="flex-grow-1 border-top"></div>
+            </div>
+
+            <button type="button" id="swal-qr-btn" class="btn btn-outline-dark w-100 py-2">Enter with QR code</button>
+          </div>
         `,
         allowOutsideClick: false,
         allowEscapeKey: false,
-        allowEnterKey: true,
-        showCloseButton: false,
-        reverseButtons: true,
-        showCancelButton: true,
-        cancelButtonText: "Back",
-        confirmButtonText: "Check in",
-        didOpen: () => {
-          document.getElementById('swal-qr-btn').onclick = () => tiketQR(1);
+        showConfirmButton: false,
+        showCancelButton: false,
+        showCloseButton: true,
+        customClass: {
+          popup: 'exam-pin-modal-popup'
         },
-        preConfirm: () => {
-          const pin = document.getElementById('swal-pin-input').value;
-          return pin;
+        didOpen: () => {
+          const getPin = () => {
+            let pin = '';
+            for (let i = 0; i < 6; i++) {
+              const el = document.getElementById(`swal-pin-${i}`);
+              if (el) pin += el.value;
+            }
+            return pin;
+          };
+
+          // Setup PIN inputs
+          for (let i = 0; i < 6; i++) {
+            const input = document.getElementById(`swal-pin-${i}`);
+            if (!input) continue;
+
+            input.addEventListener('input', (e) => {
+              const val = e.target.value;
+              if (val.length > 1) {
+                e.target.value = val.slice(-1);
+              }
+              if (e.target.value && i < 5) {
+                const nextInput = document.getElementById(`swal-pin-${i + 1}`);
+                if (nextInput) nextInput.focus();
+              }
+              const pin = getPin();
+              if (pin.length === 6) {
+                submitPin(pin);
+              }
+            });
+
+            input.addEventListener('keydown', (e) => {
+              if (e.key === 'Backspace' || e.key === 'Delete') {
+                if (e.target.value === '') {
+                  if (i > 0) {
+                    const prevInput = document.getElementById(`swal-pin-${i - 1}`);
+                    if (prevInput) {
+                      prevInput.value = '';
+                      prevInput.focus();
+                    }
+                    e.preventDefault();
+                  }
+                } else {
+                  e.target.value = '';
+                  e.preventDefault();
+                }
+              } else if (e.key === 'ArrowLeft' && i > 0) {
+                document.getElementById(`swal-pin-${i - 1}`)?.focus();
+              } else if (e.key === 'ArrowRight' && i < 5) {
+                document.getElementById(`swal-pin-${i + 1}`)?.focus();
+              } else if (e.key === 'Enter') {
+                e.preventDefault();
+                const pin = getPin();
+                if (pin.length === 6) {
+                  submitPin(pin);
+                } else {
+                  input.classList.add('is-invalid');
+                  setTimeout(() => input.classList.remove('is-invalid'), 1000);
+                }
+              }
+            });
+
+            input.addEventListener('paste', (e) => {
+              e.preventDefault();
+              const pastedData = (e.clipboardData || window.clipboardData).getData('text').trim();
+              if (!pastedData) return;
+              const chars = pastedData.split('').slice(0, 6);
+              chars.forEach((char, idx) => {
+                const box = document.getElementById(`swal-pin-${idx}`);
+                if (box) box.value = char;
+              });
+              const focusIdx = Math.min(chars.length, 5);
+              document.getElementById(`swal-pin-${focusIdx}`)?.focus();
+              const pin = getPin();
+              if (pin.length === 6) {
+                submitPin(pin);
+              }
+            });
+          }
+
+          // Check-in button click
+          const checkinBtn = document.getElementById('swal-checkin-btn');
+          if (checkinBtn) {
+            checkinBtn.onclick = () => {
+              const pin = getPin();
+              if (pin.length === 6) {
+                submitPin(pin);
+              } else {
+                for (let i = 0; i < 6; i++) {
+                  const box = document.getElementById(`swal-pin-${i}`);
+                  if (box && !box.value) {
+                    box.classList.add('is-invalid');
+                    box.focus();
+                    setTimeout(() => box.classList.remove('is-invalid'), 1200);
+                    break;
+                  }
+                }
+              }
+            };
+          }
+
+          // QR code button click
+          const qrBtn = document.getElementById('swal-qr-btn');
+          if (qrBtn) {
+            qrBtn.onclick = () => {
+              isActionTriggered = true;
+              tiketQR(1);
+            };
+          }
+
+          // Auto-focus first pin box
+          setTimeout(() => {
+            document.getElementById('swal-pin-0')?.focus();
+          }, 100);
         }
       }).then(butClick => {
-        if(butClick.isConfirmed){
-          const pin = butClick.value;
-          fetch(`${process.env.REACT_APP_HOST}/ST/assignment/checkpin`, {
-            method: 'POST',
-            credentials: "include",
-            headers: {
-                "Content-type": "application/json; charset=UTF-8",
-                "Access-Control-Allow-Origin": "*",
-                "X-CSRF-TOKEN": Cookies.get("csrf_token")
-            },
-            body: JSON.stringify({ 
-              LID: LID,
-              Pin: pin
-            })
-          })
-          .then(response => response.json())
-          .then(data => {
-        if(data.success){
-          window.location.reload()
-          return
+        if (butClick.isDismissed && butClick.dismiss && !isActionTriggered) {
+          navigate("/Class");
+          return;
         }
-        withReactContent(Swal).fire({
-          title: data.msg,
-          icon: "error"
-        }).then(butClick => {
-          if(butClick){
-            window.location.reload()
-          }
-        })
-          })
-          return
-        }
-        if(butClick.isDismissed && butClick.dismiss){
-          navigate("/Class")
-          return
-        }
-      })
+      });
     }
   }, [LabInfo, LID, navigate, tiketQR]);
 

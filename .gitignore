@@ -7,3 +7,4 @@ api/src/files
 __pycache__
 tmp
 .nogic/
+build/
