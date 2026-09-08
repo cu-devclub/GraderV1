@@ -137,7 +137,7 @@ def main():
             'data': {}
         }), 200
 
-    expires_access = timedelta(days=30)
+    expires_access = timedelta(days=3)
 
 
     ac_token_data = {
