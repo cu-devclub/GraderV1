@@ -24,25 +24,6 @@ jobs:
       -
         name: Checkout repository
         uses: actions/checkout@v3
-      
-      # - 
-      #   name: Create .env file
-      #   if: github.ref_name == 'latest'
-      #   run: echo "${{ secrets.PROD_FRONT_VAR }}" > ./frontend/src/.env
-      # - 
-      #   name: Create .env file
-      #   if: github.ref_name == 'testing'
-      #   run: echo "${{ secrets.TEST_FRONT_VAR }}" > ./frontend/src/.env
-      # -
-      #   name: Make ENVFILE (LATEST)
-      #   if: github.ref_name == 'latest'
-      #   uses: SpicyPizza/create-envfile@v2.0
-      #   with:
-      #     envkey_PORT: ${{ secrets.PROD_PORT_FRONT }}
-      #     envkey_REACT_APP_HOST: ${{ secrets.PROD_API }}
-      #     envkey_REACT_APP_DEV: ${{ secrets.PROD_DEV }}
-      #     file_name: .env
-      #     directory: ./frontend/src/
       - 
         name: Create .env File
         if: github.ref_name == 'latest'
@@ -53,17 +34,6 @@ jobs:
           REACT_APP_DEV=${{ secrets.PROD_DEV }}
           EOF
 
-      # -
-      #   name: Make ENVFILE (TESTING)
-      #   if: github.ref_name == 'testing'
-      #   uses: SpicyPizza/create-envfile@v2.0
-      #   with:
-      #     envkey_PORT: ${{ secrets.TEST_PORT_FRONT }}
-      #     envkey_REACT_APP_HOST: ${{ secrets.TEST_API }}
-      #     envkey_REACT_APP_DEV: ${{ secrets.TEST_DEV }}
-      #     file_name: .env
-      #     directory: ./frontend/src/
-
       - 
         name: Create .env File
         if: github.ref_name == 'testing'
@@ -73,40 +43,6 @@ jobs:
           REACT_APP_HOST=${{ secrets.TEST_API }}
           REACT_APP_DEV=${{ secrets.TEST_DEV }}
           EOF
-
-      -
-        name: Edit nginx.conf (DEVELOPMENT)
-        if: github.ref_name == 'testing'
-        run: |
-          sed -i 's/chula.ac.th/${{ secrets.TEST_NGINX_DOMAIN }}/g' ./frontend/nginx.conf
-      -
-        name: Validate nginx.conf (DEVELOPMENT)
-        if: github.ref_name == 'testing'
-        run: |
-          if grep -q "${{ secrets.TEST_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
-            echo "nginx.conf development validation passed"
-          else
-            echo "nginx.conf development validation failed" && exit 1
-          fi
-      -
-        name: Edit nginx.conf (PRODUCTION)
-        if: github.ref_name == 'latest'
-        run: |
-          sed -i 's/chula.ac.th/${{ secrets.PROD_NGINX_DOMAIN }}/g' ./frontend/nginx.conf
-      -
-        name: Validate nginx.conf (PRODUCTION)
-        if: github.ref_name == 'latest'
-        run: |
-          if grep -q "${{ secrets.PROD_NGINX_DOMAIN }}" ./frontend/nginx.conf && ! grep -q "chula.ac.th" ./frontend/nginx.conf; then
-            echo "nginx.conf development validation passed"
-          else
-            echo "nginx.conf development validation failed" && exit 1
-          fi
-      -
-        name: Log nginx.conf (CRITICAL)
-        run: |
-          echo "nginx.conf:"
-          cat ./frontend/nginx.conf
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v3

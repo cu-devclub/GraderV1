@@ -13,6 +13,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/sessions"
@@ -29,10 +30,9 @@ var googleOauthConfig *oauth2.Config
 var spkiKey *rsa.PublicKey
 
 func init() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatalf("Error loading .env file")
-	}
+	if err := godotenv.Load(); err != nil {
+        log.Println("No .env file found, reading from container environment")
+    }
 
 	file, err := os.Open("client_secrets.json")
 	if err != nil {
@@ -60,9 +60,18 @@ func init() {
 		Endpoint:     google.Endpoint,
 	}
 
-	spkiBlock, _ := pem.Decode([]byte(os.Getenv("PUBKEY")))
-	pubInterface, _ := x509.ParsePKIXPublicKey(spkiBlock.Bytes)
-	spkiKey = pubInterface.(*rsa.PublicKey)
+	rawPub := strings.ReplaceAll(os.Getenv("PUBKEY"), "\\n", "\n")
+	spkiBlock, _ := pem.Decode([]byte(rawPub))
+	if spkiBlock != nil {
+		pubInterface, err := x509.ParsePKIXPublicKey(spkiBlock.Bytes)
+		if err == nil {
+			spkiKey = pubInterface.(*rsa.PublicKey)
+		} else {
+			log.Printf("Warning: Failed to parse public key: %v", err)
+		}
+	} else {
+		log.Println("Warning: Failed to decode PEM block from PUBKEY")
+	}
 }
 
 func main() {
