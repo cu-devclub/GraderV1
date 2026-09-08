@@ -1,0 +1,17 @@
+services:
+  mysql:
+    image: mysql:8.0.36
+    container_name: mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ~/grader/db:/var/lib/mysql
+      - ~/grader/my.cnf:/etc/mysql/conf.d/custom.cnf:ro
+    networks:
+      - grader-network
+
+networks:
+  grader-network:
