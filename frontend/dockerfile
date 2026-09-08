@@ -1,5 +1,5 @@
 # Stage 1: Build the React application
-FROM node:21-alpine AS build
+FROM node:21 AS build
 
 # Set working directory
 WORKDIR /app
@@ -8,18 +8,12 @@ WORKDIR /app
 COPY src/package.json src/package-lock.json ./
 
 # Install dependencies
-RUN npm ci
+RUN npm install
 
 # Copy the source code and .env file
 COPY src/src ./src
 COPY src/public ./public
-COPY src/.env* ./
-
-# Build arguments from compose (overrides .env if provided)
-ARG REACT_APP_HOST
-ARG REACT_APP_DEV
-ENV REACT_APP_HOST=${REACT_APP_HOST}
-ENV REACT_APP_DEV=${REACT_APP_DEV}
+COPY src/.env .env
 
 # Build the application
 RUN npm run build
