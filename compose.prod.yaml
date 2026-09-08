@@ -15,6 +15,10 @@ services:
       AUTH_URL: ${AUTH_URL:-auth:5050}
     volumes:
       - ${LETSENCRYPT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+      - frontend
+      - auth
     networks:
       - grader-network
 
