@@ -6,8 +6,8 @@ from importlib import import_module
 
 # Flask
 from flask_cors import CORS
-from flask import app, Flask, Response, g, send_from_directory, send_file, jsonify
-from flask_jwt_extended import JWTManager
+from flask import app, Flask, Response, g, send_from_directory, send_file, jsonify, request
+from flask_jwt_extended import JWTManager, verify_jwt_in_request, get_jwt_identity
 
 # Google
 # from function.google import secret_key
@@ -69,6 +69,17 @@ def index():
 def before_request():
     g.db = get_db()
     g.dbdict = get_dbdict()
+    
+    # Custom Logging
+    try:
+        verify_jwt_in_request(optional=True)
+        email = get_jwt_identity() or "Unauthenticated"
+    except Exception:
+        email = "Unauthenticated"
+        
+    real_ip = request.headers.get('X-Real-IP', request.remote_addr)
+    if request.method != 'OPTIONS':
+        app.logger.info(f"User: {email} | IP: {real_ip} | Method: {request.method} | Path: {request.path}")
 
 
 @app.teardown_request
@@ -133,7 +144,16 @@ for i in gbl['list_route']:
         alt_path = route_path.replace('/student', '/Student')
         app.add_url_rule(alt_path, i + "_alt_Student", gbl[i].main, methods=x[1].split("-"))
 
+@app.errorhandler(Exception)
+def handle_exception(e):
+    app.logger.error(f"Unhandled Exception: {e}", exc_info=True)
+    return jsonify(success=False, msg="Internal Server Error", error=str(e)), 500
+
 print(tabulate(mount_info, headers=['Route', 'Method', "Path"]))
+
+import logging
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 # start api server
 if __name__ == "__main__":

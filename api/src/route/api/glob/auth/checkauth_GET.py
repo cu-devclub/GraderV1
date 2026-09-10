@@ -37,7 +37,7 @@ def main():
     """
 
     # Execute a SELECT statement
-    cur.execute(query,(email))
+    cur.execute(query, (email,))
     
     # Fetch all rows
     data = cur.fetchall()
@@ -45,7 +45,9 @@ def main():
     cur.close()
 
     if len(data) != 1:
-        return {}, 500
+        from flask import current_app
+        current_app.logger.error(f"User not found or duplicate: expected 1 user for email {email}, found {len(data)}")
+        return jsonify(success=False, msg=f"User not found for email {email}"), 500
     else:
         transformed_data = {}
         Ename, Email, Name, Role = data[0]
