@@ -26,7 +26,9 @@ services:
       dockerfile: dockerfile
     ports:
       - "${API_PORT:-5000}:5000"
+    working_dir: /app
     environment:
+      FLASK_DEBUG: 1
       DEV: ${DEV:-true}
       HOST: "0.0.0.0"
       PORT: "5000"
@@ -39,6 +41,7 @@ services:
       PUBKEY: ${ASSIGNMENT_RSA_PUBLIC_KEY}
       PRIKEY: ${ASSIGNMENT_RSA_PRIVATE_KEY}
     volumes:
+      - ./api/src:/app
       - ${FILES_STORAGE:-~/grader/files}:/files
     depends_on:
       - mysql
