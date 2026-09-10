@@ -6,7 +6,7 @@ import Cookies from 'js-cookie';
 function Navbar() {
         const handleButtonClick = () => {};
         const [version,] = useState("1.8.1")
-        const email = sessionStorage.getItem('Email') || '';
+        const email = Cookies.get('Email') || '';
         const username = email.split('@')[0];
         const [showDropdown, setShowDropdown] = useState(false);
         const dropdownRef = useRef(null);

@@ -14,13 +14,10 @@ export const useAuth = async () => {
     }
     var dt = await response.json();
 
-    const isDev = process.env.REACT_APP_DEV.toLowerCase() === 'true';
-    if(!isDev) {
-        Cookies.set('Name', dt['data']['Name'])
-        Cookies.set('Email', dt['data']['Email'])
-        Cookies.set('uid', dt['data']['ID'])
-        Cookies.set('role', dt['data']['Role'])
-    }
+    Cookies.set('Name', dt['data']['Name'])
+    Cookies.set('Email', dt['data']['Email'])
+    Cookies.set('uid', dt['data']['ID'])
+    Cookies.set('role', dt['data']['Role'])
 
     return true;
 };

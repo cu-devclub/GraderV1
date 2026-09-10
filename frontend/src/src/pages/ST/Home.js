@@ -180,31 +180,45 @@ function HomeST() {
 
       {(classes && Object.keys(classes).length > 0) && ready ? (
           <div>
+            {courses && Object.keys(courses).length > 0 && (
+              <div className="container-lg">
+                <hr className="my-4" style={{ borderTop: '2px solid #dee2e6' }} />
+              </div>
+            )}
             <br></br>
             <div className="container-lg mb-3" style={{ padding: '10px' }}>
-              <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
-                {Object.keys(classes).map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              {expandedYear && classes[expandedYear] && (
-                <div className="row row-cols-1 row-cols-md-5 g-2">
-                  {classes[expandedYear].map((course) => (
-                    <div className="card custom-hover-card" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
-                      onClick={() => {sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/Class");}}
-                    >
-                      <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
-                        <img className="card-img-top w-100 d-block" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
-                      </div>
-                      <div className="card-body" style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
-                        <h5 className="card-title fw-bold text-dark" style={{ marginBottom: '8px' }}>{course.ClassName}</h5>
-                        <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
-                          <i className="bi bi-hash me-1"></i>{course.ClassID}
-                          <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{expandedYear}</span>
-                        </p>
-                      </div>
-                    </div>
+              {(!courses || Object.keys(courses).length === 0) && (
+                <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
+                  {Object.keys(classes).map(year => (
+                    <option key={year} value={year}>{year}</option>
                   ))}
+                </select>
+              )}
+              {expandedYear && classes[expandedYear] ? (
+                <div className="mb-4">
+                  <h5 className="text-muted mb-3" style={{ paddingLeft: '10px' }}>Student Classes (Year {expandedYear})</h5>
+                  <div className="row row-cols-1 row-cols-md-5 g-2">
+                    {classes[expandedYear].map((course) => (
+                      <div className="card custom-hover-card" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
+                        onClick={() => {sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/Class");}}
+                      >
+                        <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
+                          <img className="card-img-top w-100 d-block" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
+                        </div>
+                        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
+                          <h5 className="card-title fw-bold text-dark" style={{ marginBottom: '8px' }}>{course.ClassName}</h5>
+                          <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                            <i className="bi bi-hash me-1"></i>{course.ClassID}
+                            <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{expandedYear}</span>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <h5 className="text-muted mb-3" style={{ paddingLeft: '10px' }}>No student classes for Year {expandedYear}</h5>
                 </div>
               )}
             </div>
