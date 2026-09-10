@@ -1,0 +1,16 @@
+FROM node:21
+
+WORKDIR /app
+
+# Copy package dependency definitions
+COPY src/package.json src/package-lock.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy application source code
+COPY src/ ./
+
+EXPOSE 3000
+
+CMD ["npm", "start"]

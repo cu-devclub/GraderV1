@@ -164,10 +164,16 @@ function TAmanage() {
                         <div className="col">
                             <ul className="nav nav-tabs card-header-tabs">
                                 <li className="nav-item">
-                                    <button className="nav-link link" onClick={() => {navigate("/ClassEdit")}}>Class edit</button>
+                                    <button className="nav-link link" onClick={() => {navigate("/ClassEdit")}}>Class</button>
                                 </li>
                                 <li className="nav-item">
-                                    <button className="nav-link active" >TA management</button>
+                                    <button className="nav-link link" onClick={() => {navigate("/ClassEdit")}}>Picture</button>
+                                </li>
+                                <li className="nav-item">
+                                    <button className="nav-link link" onClick={() => {navigate("/ClassEdit")}}>Student</button>
+                                </li>
+                                <li className="nav-item">
+                                    <button className="nav-link active">TA</button>
                                 </li>
                             </ul>
                         </div>
