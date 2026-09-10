@@ -42,6 +42,7 @@ services:
       DOMAIN: ${DOMAIN:-https://sci.cugrader.com}
       PUBKEY: ${ASSIGNMENT_RSA_PUBLIC_KEY:-${PUBKEY}}
       PRIKEY: ${ASSIGNMENT_RSA_PRIVATE_KEY:-${PRIKEY}}
+      PYTHONUNBUFFERED: "1"
     networks:
       - grader-network
     labels:

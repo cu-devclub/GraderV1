@@ -155,6 +155,8 @@ import logging
 log = logging.getLogger('werkzeug')
 log.setLevel(logging.ERROR)
 
+app.logger.setLevel(logging.INFO)
+
 # start api server
 if __name__ == "__main__":
     app.run(debug=isDev, host=config['HOST'], port=int(config['PORT']))
