@@ -5,7 +5,7 @@ import Navbar from '../../components/Navbar'
 import { useNavigate} from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import { Download } from 'react-bootstrap-icons';
+import { Download, ThreeDotsVertical } from 'react-bootstrap-icons';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -21,6 +21,21 @@ function ClassEdit() {
     const [schoolYear, setSchoolYear] = useState('');
     const [className, setClassName] = useState('');
     const [Archive, setArchive] = useState(sessionStorage.getItem("Archive") === 'true')
+    const [activeTab, setActiveTab] = useState('class');
+
+    const [pictureFile, setPictureFile] = useState(null);
+    const [studentFile, setStudentFile] = useState(null);
+
+    const [isDraggingPic, setIsDraggingPic] = useState(false);
+    const [isDraggingStu, setIsDraggingStu] = useState(false);
+
+    const onDragOverPic = (e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingPic(true); };
+    const onDragLeavePic = (e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingPic(false); };
+    const onDropPicture = (e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingPic(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) setPictureFile(e.dataTransfer.files[0]); };
+
+    const onDragOverStu = (e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingStu(true); };
+    const onDragLeaveStu = (e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingStu(false); };
+    const onDropStudent = (e) => { e.preventDefault(); e.stopPropagation(); setIsDraggingStu(false); if (e.dataTransfer.files && e.dataTransfer.files[0]) setStudentFile(e.dataTransfer.files[0]); };
 
     const [timestamps, setTimestamps] = useState(Array(2).fill('')); // กำหนดขนาดของอาร์เรย์ตามจำนวนที่ต้องการใช้งาน (ในที่นี้คือ 2)
 
@@ -131,15 +146,14 @@ function ClassEdit() {
 
       /* Thumbnail */
         if(index === 0){
-            const fileInput = document.getElementById('inputGroupFile01');
-            if(fileInput.files.length !== 1){
+            if(!pictureFile){
                 withReactContent(Swal).fire({
                     title: "Please select file!",
                     icon: "warning"
                 })
                 return
             }
-            const fileThumbnail = fileInput.files[0];
+            const fileThumbnail = pictureFile;
 
             const formData = new FormData();
             formData.append('CSYID', CSYID)
@@ -180,15 +194,14 @@ function ClassEdit() {
         }
       /* CSV */
         if (index === 1) {
-            const fileInput = document.getElementById('inputGroupFile02');
-            if(fileInput.files.length !== 1){
+            if(!studentFile){
                 withReactContent(Swal).fire({
                     title: "Please select file!",
                     icon: "warning"
                 })
                 return
             }
-            const fileCSV = fileInput.files[0];
+            const fileCSV = studentFile;
         
             const formData = new FormData();
             formData.append('CSYID', CSYID)
@@ -427,92 +440,186 @@ function ClassEdit() {
                     <div className="col">
                         <ul className="nav nav-tabs card-header-tabs">
                             <li className="nav-item">
-                                <button className="nav-link active">Class edit</button>
+                                <button className={`nav-link ${activeTab === 'class' ? 'active' : 'link'}`} onClick={() => setActiveTab('class')}>Class</button>
                             </li>
                             <li className="nav-item">
-                                <button className="nav-link link" onClick={() => {sessionStorage.setItem("CSYID", classData.classid);navigate("/TAmanage")}} >TA management</button>
+                                <button className={`nav-link ${activeTab === 'picture' ? 'active' : 'link'}`} onClick={() => setActiveTab('picture')}>Picture</button>
+                            </li>
+                            <li className="nav-item">
+                                <button className={`nav-link ${activeTab === 'student' ? 'active' : 'link'}`} onClick={() => setActiveTab('student')}>Student</button>
+                            </li>
+                            <li className="nav-item">
+                                <button className="nav-link link" onClick={() => {sessionStorage.setItem("CSYID", classData.classid);navigate("/TAmanage")}} >TA</button>
                             </li>
                         </ul>
                     </div>
                     <div className="col-md-2">
-                        {/* <button className="btn btn-danger float-end" type="button" style={{marginLeft:"20px"}} onClick={handleDelete}>Delete</button> */}
-                        {/* <button className="btn btn-danger float-end" type="button" style={{marginLeft:"20px"}} onClick={handleArchive}>{classData.Archive ? "Unarchive" : "Archive"}</button> */}
                         <button className="btn btn-primary float-end" type="button" style={{marginLeft:"20px"}} onClick={() => navigate("/")}>Back</button>
-                        <input type="checkbox" className="btn-check float-end" id="btn-check-outlined" checked={Archive} autoComplete="off"/>
-                        <label className="btn btn-outline-secondary float-end" htmlFor="btn-check-outlined" onClick={handleArchive}>{Archive ? "Unarchive" : "Archive"}</label><br></br>
                     </div>
                 </div>
             </div>
             <div className="card-body">
-                <h3>Information</h3>
-                <br/>
-                <div className="row g-3">
-                    <div className="col-md-3">
-                        <label htmlFor="inputID" className="form-label">Class ID*</label>
-                        <input type="text" className="form-control" id="inputID" placeholder="ex. 2301233 (7 digits number)" value={classID} onChange={handleClassIDChange} />
-                    </div>
-                    <div className="col-md-3">
-                        <label htmlFor="inputYear" className="form-label">School Year/Semester*</label>
-                        <input type="text" className="form-control" id="inputYear" placeholder="ex. 2020/1" value={schoolYear} onChange={handleSchoolYearChange}/>
-                    </div>
-                    <div className="col-6">
-                        <label htmlFor="inputName" className="form-label">Class Name*</label>
-                        <input type="text" className="form-control" id="inputClass" placeholder="Name" value={className} onChange={handleClassNameChange}/>
-                    </div>
-                </div>
-                <div className="row" style={{marginTop: "10px",marginBottom: "20px"}}>
-                    <div className="col">
-                        <button type="button" className="btn btn-primary float-end" disabled={isCreateButtonDisabled} onClick={handleEditClick}>Save</button>
-                    </div>
-                </div>
-                <div className="row">
-                    <div className="col">
-                        <h3>Class Picture</h3>
+                {activeTab === 'class' && (
+                    <>
+                        <h3>Information</h3>
                         <br/>
-                        <div className="row">
+                        <div className="row g-3">
                             <div className="col-md-3">
-                                <img src={(classData.Thumbnail && classData.Thumbnail !== "null") ? `${host}/Thumbnail/` + classData.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100px', height: '100px', borderRadius: '5px', marginLeft: "0.5em"}}  alt="..."/>
-                                <br/>
-                                {(classData.Thumbnail && classData.Thumbnail !== "null") ? (<button type="button" className="btn btn-outline-dark" style={{width: "auto", textAlign: "Left", marginTop: "0.4em"}} onClick={() => {downfile()}}><Download /> Download</button>) : (<i/>)}
+                                <label htmlFor="inputID" className="form-label">Class ID*</label>
+                                <input type="text" className="form-control" id="inputID" placeholder="ex. 2301233 (7 digits number)" value={classID} onChange={handleClassIDChange} />
                             </div>
+                            <div className="col-md-3">
+                                <label htmlFor="inputYear" className="form-label">School Year/Semester*</label>
+                                <input type="text" className="form-control" id="inputYear" placeholder="ex. 2020/1" value={schoolYear} onChange={handleSchoolYearChange}/>
+                            </div>
+                            <div className="col-6">
+                                <label htmlFor="inputName" className="form-label">Class Name*</label>
+                                <input type="text" className="form-control" id="inputClass" placeholder="Name" value={className} onChange={handleClassNameChange}/>
+                            </div>
+                        </div>
+                        <div className="row" style={{marginTop: "10px",marginBottom: "20px"}}>
                             <div className="col">
-                                <div className="input-group">
-                                    <input type="file" className="form-control" id="inputGroupFile01" aria-describedby="inputGroupFileAddon04" aria-label="Upload" />
-                                </div>
-                                <br/>
-                                <div className="row">
-                                    <div className="col">
-                                        {timestamps[0] && <p className="card-text">Last Submitted: <span>{timestamps[0]}</span></p>}
+                                <button type="button" className="btn btn-primary float-end" disabled={isCreateButtonDisabled} onClick={handleEditClick}>Save</button>
+                                <button type="button" className="btn btn-outline-danger float-end" style={{marginRight: "10px"}} onClick={handleArchive}>{Archive ? "Unarchive" : "Archive"}</button>
+                            </div>
+                        </div>
+                    </>
+                )}
+
+                {activeTab === 'picture' && (
+                    <div className="row">
+                        <div className="col">
+                            <h3>Class Picture</h3>
+                            <br/>
+                            <div className="row">
+                                <div className="col-md-5">
+                                    <h6 className="text-muted mb-3">Card Preview</h6>
+                                    <div className="card" style={{width: '300px', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', opacity: Archive ? 0.5 : 1}}>
+                                        <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
+                                            <img className="card-img-top w-100 d-block" src={pictureFile ? URL.createObjectURL(pictureFile) : ((classData.Thumbnail && classData.Thumbnail !== "null") ? `${host}/Thumbnail/` + classData.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png")} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
+                                        </div>
+                                        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', padding: '20px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                <h5 className="card-title fw-bold text-dark" style={{ marginBottom: '8px', flex: 1, minWidth: 0 }}>
+                                                    {className || "Class Name"}
+                                                    {Archive && <span className="badge bg-secondary ms-2 align-text-top" style={{fontSize: '0.7rem', fontWeight: '500'}}>Archived</span>}
+                                                </h5>
+                                                <button className="btn btn-link p-0 text-muted" type="button" style={{ fontSize: '1.2rem', textDecoration: 'none', cursor: 'default' }}>
+                                                    <ThreeDotsVertical />
+                                                </button>
+                                            </div>
+                                            <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: '15px', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                                                <i className="bi bi-hash me-1"></i>{classID || "Class ID"}
+                                                <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{schoolYear || "Year"}</span>
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="col-md-2">
-                                        <button className="btn btn-primary float-end" type="button" id="inputGroupFileAddon04" onClick={() => handleUpload(0)}>Upload</button>
+                                    <br/>
+                                    {(classData.Thumbnail && classData.Thumbnail !== "null") ? (<button type="button" className="btn btn-outline-dark" style={{width: "auto", textAlign: "Left", marginTop: "0.4em"}} onClick={() => {downfile()}}><Download /> Download Current Thumbnail</button>) : (<i/>)}
+                                </div>
+                                <div className="col">
+                                    <h6 className="text-muted mb-3">Upload New Picture</h6>
+                                    <div 
+                                        className="p-5 text-center" 
+                                        style={{ 
+                                            border: isDraggingPic ? '2px dashed #0d6efd' : (pictureFile ? '2px solid #0d6efd' : '2px dashed #adb5bd'),
+                                            borderRadius: '16px',
+                                            cursor: 'pointer', 
+                                            backgroundColor: isDraggingPic ? '#e9ecef' : (pictureFile ? '#f8fbff' : '#ffffff'), 
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: isDraggingPic ? '0 8px 24px rgba(13, 110, 253, 0.15)' : 'none'
+                                        }}
+                                        onDragOver={onDragOverPic}
+                                        onDragLeave={onDragLeavePic}
+                                        onDrop={onDropPicture}
+                                        onClick={() => document.getElementById('inputGroupFile01').click()}
+                                    >
+                                        <input type="file" id="inputGroupFile01" style={{ display: 'none' }} accept="image/*" onChange={(e) => { if(e.target.files && e.target.files[0]) setPictureFile(e.target.files[0]) }} />
+                                        {pictureFile ? (
+                                            <div>
+                                                <i className="bi bi-file-image text-primary" style={{ fontSize: '3.5rem' }}></i>
+                                                <p className="mt-3 mb-0 fw-bold text-dark fs-5">{pictureFile.name}</p>
+                                                <small className="text-primary mt-1 d-block">Click or drag to replace</small>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <i className={`bi bi-cloud-arrow-up ${isDraggingPic ? 'text-primary' : 'text-secondary'}`} style={{ fontSize: '3.5rem', transition: 'color 0.3s ease' }}></i>
+                                                <p className={`mt-3 mb-0 fs-5 ${isDraggingPic ? 'text-primary fw-bold' : 'text-dark fw-semibold'}`}>
+                                                    {isDraggingPic ? 'Drop image here...' : 'Drag & drop an image here'}
+                                                </p>
+                                                <small className="text-muted mt-1 d-block">or click to browse from your computer</small>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <br/>
+                                    <div className="row mt-2">
+                                        <div className="col">
+                                            {timestamps[0] && <p className="card-text text-muted">Last Submitted: <span>{timestamps[0]}</span></p>}
+                                        </div>
+                                        <div className="col-md-3">
+                                            <button className="btn btn-primary float-end w-100 fw-bold" style={{ borderRadius: '8px' }} type="button" onClick={() => handleUpload(0)}>Upload</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className="col">
-                        <h3>Student List</h3>
-                        <br/>
-                        <div className="row">
-                            <div className="col">
-                                <div className="input-group">
-                                    <input type="file" className="form-control" id="inputGroupFile02" aria-describedby="inputGroupFileAddon04" aria-label="Upload" />
-                                </div>
-                                <br/>
-                                <div className="row">
-                                    <div className="col">
-                                        {timestamps[1] && <p className="card-text">Last Submitted: <span>{timestamps[1]}</span></p>}
+                )}
+
+                {activeTab === 'student' && (
+                    <div className="row">
+                        <div className="col">
+                            <h3>Student List</h3>
+                            <br/>
+                            <div className="row">
+                                <div className="col">
+                                    <div 
+                                        className="p-5 text-center" 
+                                        style={{ 
+                                            border: isDraggingStu ? '2px dashed #198754' : (studentFile ? '2px solid #198754' : '2px dashed #adb5bd'),
+                                            borderRadius: '16px',
+                                            cursor: 'pointer', 
+                                            backgroundColor: isDraggingStu ? '#e8f5e9' : (studentFile ? '#f0fdf4' : '#ffffff'), 
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: isDraggingStu ? '0 8px 24px rgba(25, 135, 84, 0.15)' : 'none'
+                                        }}
+                                        onDragOver={onDragOverStu}
+                                        onDragLeave={onDragLeaveStu}
+                                        onDrop={onDropStudent}
+                                        onClick={() => document.getElementById('inputGroupFile02').click()}
+                                    >
+                                        <input type="file" id="inputGroupFile02" accept=".csv" style={{ display: 'none' }} onChange={(e) => { if(e.target.files && e.target.files[0]) setStudentFile(e.target.files[0]) }} />
+                                        {studentFile ? (
+                                            <div>
+                                                <i className="bi bi-file-earmark-spreadsheet text-success" style={{ fontSize: '3.5rem' }}></i>
+                                                <p className="mt-3 mb-0 fw-bold text-dark fs-5">{studentFile.name}</p>
+                                                <small className="text-success mt-1 d-block">Click or drag to replace</small>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <i className={`bi bi-cloud-arrow-up ${isDraggingStu ? 'text-success' : 'text-secondary'}`} style={{ fontSize: '3.5rem', transition: 'color 0.3s ease' }}></i>
+                                                <p className={`mt-3 mb-0 fs-5 ${isDraggingStu ? 'text-success fw-bold' : 'text-dark fw-semibold'}`}>
+                                                    {isDraggingStu ? 'Drop CSV here...' : 'Drag & drop CSV file here'}
+                                                </p>
+                                                <small className="text-muted mt-1 d-block">or click to browse from your computer</small>
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="col-md-4">
-                                        <button className="btn btn-primary float-end" type="button" id="inputGroupFileAddon04" onClick={() => handleUpload(1)}>Upload</button>
-                                        <button className="btn btn-secondary float-end" type="button" style={{marginRight: "10px"}} onClick={handleGenTemplate}>Template</button>
+                                    <br/>
+                                    <div className="row mt-2">
+                                        <div className="col">
+                                            {timestamps[1] && <p className="card-text text-muted">Last Submitted: <span>{timestamps[1]}</span></p>}
+                                        </div>
+                                        <div className="col-md-4">
+                                            <button className="btn btn-primary float-end fw-bold" style={{ borderRadius: '8px' }} type="button" onClick={() => handleUpload(1)}>Upload</button>
+                                            <button className="btn btn-outline-secondary float-end fw-bold" type="button" style={{marginRight: "10px", borderRadius: '8px'}} onClick={handleGenTemplate}>Template</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
         </div>
         ) : (

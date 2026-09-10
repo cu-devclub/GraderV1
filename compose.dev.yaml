@@ -1,4 +1,8 @@
 services:
+  mysql:
+    volumes:
+      - ~/grader/test/db:/var/lib/mysql
+
   db-migrator:
     build:
       context: ./db
@@ -45,12 +49,24 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: dockerfile
+      dockerfile: Dockerfile.dev
       args:
         REACT_APP_HOST: ${REACT_API_HOST:-http://localhost:5000/api}
         REACT_APP_DEV: ${REACT_APP_DEV:-true}
+    environment:
+      REACT_APP_HOST: ${REACT_API_HOST:-http://localhost:5000/api}
+      REACT_APP_DEV: ${REACT_APP_DEV:-true}
+      PORT: 3000
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      WDS_SOCKET_PORT: "0"
+    volumes:
+      - ./frontend/src:/app
+      - /app/node_modules
     ports:
-      - "${PORT:-3000}:80"
+      - "${PORT:-3000}:3000"
+    stdin_open: true
+    tty: true
     depends_on:
       - backend
     networks:
