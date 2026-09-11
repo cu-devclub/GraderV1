@@ -52,7 +52,7 @@ function HomeST() {
           const classData = await classResponse.json();
           const sortedCourses = Object.fromEntries(Object.entries(classData).sort((a, b) => b[0].localeCompare(a[0])));
           setClasses(sortedCourses);
-          if(Object.keys(sortedCourses).length > 0) setExpandedYear(Object.keys(sortedCourses)[0])
+          setExpandedYear(prev => prev || (Object.keys(sortedCourses).length > 0 ? Object.keys(sortedCourses)[0] : undefined));
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -73,6 +73,7 @@ function HomeST() {
         const data = await response.json();
         const sortedCourses = Object.fromEntries(Object.entries(data).sort((a, b) => b[0].localeCompare(a[0])));
         setCourses(sortedCourses);
+        setExpandedYear(prev => prev || (Object.keys(sortedCourses).length > 0 ? Object.keys(sortedCourses)[0] : undefined));
       } catch (error) {
         console.error('Error fetching class data:', error);
       }
