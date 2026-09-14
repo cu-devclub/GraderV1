@@ -137,8 +137,8 @@ code {
 /* ----- Start fixed_header table ----- */
 .fixed_header {
     max-height: 40vh;
-    overflow: scroll;
-    overflow-x: hidden;
+    overflow-y: scroll;
+    overflow-x: visible;
 }
 .fixed_header thead th {
     position: sticky; 
@@ -149,25 +149,36 @@ code {
 
 
 /* ----- Start scrollbar style ----- */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
 ::-webkit-scrollbar {
-    width: 10px;
+    width: 6px;
+    height: 6px;
 }
 
 /* Track */
 ::-webkit-scrollbar-track {
-    background: #f1f1f1; 
-    border-radius: 5px;
+    background: transparent;
 }
 
 /* Handle */
 ::-webkit-scrollbar-thumb {
-    background: #696969; 
-    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 100px;
+    transition: background 0.2s ease;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
-    background: #393939; 
+    background: rgba(226, 85, 149, 0.5);
+}
+
+/* Corner */
+::-webkit-scrollbar-corner {
+    background: transparent;
 }
 /* ----- end scrollbar style ----- */
 

@@ -66,6 +66,7 @@ function HomePF() {
       const classData = await classResponse.json();
       sortedCourses = Object.fromEntries(Object.entries(classData).sort((a, b) => b[0].localeCompare(a[0])));
       setClasses(sortedCourses);
+      setExpandedYear(prev => prev || (Object.keys(sortedCourses).length > 0 ? Object.keys(sortedCourses)[0] : null));
 
     } catch (error) {
       console.error('Error fetching class data:', error);
@@ -195,7 +196,7 @@ function HomePF() {
           )}
 
 
-      {courses && ready ? (
+      {courses && Object.keys(courses).length > 0 && ready ? (
         <main>
           <div>
             <br></br>

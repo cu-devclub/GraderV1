@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import {Download} from 'react-bootstrap-icons';
+import { Download, ArrowLeftCircle } from 'react-bootstrap-icons';
 
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -211,42 +211,63 @@ function Sentin() {
 
   return (
     <div>
+      <style>
+          {`
+          @media (max-width: 768px) {
+              .responsive-container {
+                  margin-left: 1rem !important;
+                  margin-right: 1rem !important;
+              }
+          }
+          .tab-scroll-container {
+              display: flex;
+              overflow-x: auto;
+              white-space: nowrap;
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+          }
+          .tab-scroll-container::-webkit-scrollbar {
+              display: none;
+          }
+          `}
+      </style>
       <Navbar />
       <br />
-      <div className="media d-flex align-items-center">
-        <span style={{ margin: '0 10px' }}></span>
-        <img className="mr-3" alt="thumbnail" src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3426/3426653.png"} style={{ width: '40px', height: '40px' }} />
-        <span style={{ margin: '0 10px' }}></span>
-        <div className="card" style={{ width: '30rem', padding: '10px' }}>
-          <h5>{ClassInfo['ClassID']} {ClassInfo['ClassName']} {ClassInfo['ClassYear']}</h5>
-          <h6>Instructor: {ClassInfo['Instructor']}</h6>
+      <div className="responsive-container" style={{ marginLeft: '10em', marginRight: '10em', marginTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '38px' }}>
+        <div style={{ color: '#e25595', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: 'bold' }} onClick={() => navigate("/AssignList")}>
+          <ArrowLeftCircle size={18} /> <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Back to assignment</span>
         </div>
+        <button type="button" onClick={() => {downall()}} style={{ padding: '6px 20px', backgroundColor: 'white', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+          <Download size={16} /> Download all submission
+        </button>
       </div>
-      <br />
-      <div className="card" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh"}}>
-        <div className="card-header">
-          <div className="row" style={{marginBottom:"-5px"}}>
-            <div className="col">
-              <ul className="nav nav-tabs card-header-tabs">
-                <li className="nav-item">
-                  <button className="nav-link link" onClick={() => {navigate("/AssignEdit")}}>Edit</button>
-                </li>
-                <li className="nav-item">
-                  <button className="nav-link active" >Sent in</button>
-                </li>
-                <li className="nav-item">
-                  <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/AssignSus")}} >Suspicious</button>
-                </li>
-                <li className="nav-item">
-                  { isExamFromServ ? (<button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}} >Check in-out</button>) : ("")}
-                </li>
-              </ul>
-            </div>
-            <div className="col-md-3">
-              <button className="btn btn-primary float-end" type="button" onClick={() => navigate("/AssignList")}>Back</button>
-              <button className="btn btn-outline-dark float-end" type="button" onClick={() => {downall()}} style={{marginRight: "1em"}}>Download all</button>
+      <div className="card responsive-container" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh", border: 'none', boxShadow: 'none'}}>
+        <div style={{ backgroundColor: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #cbd5e1' }}>
+            <div className="tab-scroll-container" style={{ display: 'flex', width: '100%' }}>
+              <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Detail' } })}}>
+                Detail
+              </div>
+              <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Questions' } })}}>
+                Questions
+              </div>
+              <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Files' } })}}>
+                Additional Files
+              </div>
+              <div style={{ padding: '10px 40px', fontWeight: '600', fontSize: '1.05rem', color: '#1e293b', borderBottom: '2px solid #e25595', cursor: 'pointer', marginBottom: '-1px' }}>
+                Submission
+              </div>
+              <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/AssignSus")}}>
+                Suspicious
+              </div>
+              { isExamFromServ && (
+                <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}}>
+                  Check in-out
+                </div>
+              )}
             </div>
           </div>
+
         </div>
         <div className="card-body" style={{ overflowY: 'scroll' }}>
           <form className="d-flex">

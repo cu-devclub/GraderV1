@@ -1,9 +1,11 @@
 from function.isLock import isLock
 
+# isAccess(g.db, cur, public_ip, Email=Email, FID=FRL[2]):
+
 def isAccess(con, cur, ip, UID=None, Email:str=None, LID=None, QID=None, FID=None, SID=None):
     if not (UID or Email):
         return False
-    if not (LID or QID, FID, SID):
+    if not (LID or QID or FID or SID):
         return False
     
     if not UID:

@@ -36,7 +36,8 @@ function Navbar() {
         }, []);
 
   return (
-    <div>
+    <>
+      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1020 }}>
          <nav className="navbar navbar-dark shadow justify-content-between px-3 py-2" style={{ background: 'linear-gradient(90deg, #0d6efd 0%, #0b5ed7 100%)', borderBottom: 'none' }}>
           <a className="navbar-brand fw-bold text-white" href="/" style={{ marginLeft: '1rem', display: 'flex', alignItems: 'baseline' }}>
             <span style={{ fontSize: '1.25rem', letterSpacing: '0.5px' }}>Grader</span>
@@ -63,6 +64,8 @@ function Navbar() {
             </div>
           </form>
         </nav>
+      </div>
+      <div style={{ height: '60px' }}></div>
 
         {/* Modal */}
       <div className={`modal fade ${showModal ? 'show' : ''}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style={{ display: showModal ? 'block' : 'none' }}>
@@ -87,7 +90,7 @@ function Navbar() {
         </div>
       </div>
       
-    </div>
+    </>
   )
 }
 

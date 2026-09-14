@@ -215,7 +215,12 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
             if(protectWrite):
                 if ".write(" in TempSol or "os.remove(" in TempSol: return True, "This file contain file write method it may broke the additional assignment files"
             
-            solution.append("".join(TempSol.split(temporarySplitWord)))         
+            cell_code = "".join(TempSol.split(temporarySplitWord))
+            try:
+                compile(cell_code, '<string>', 'exec')
+                solution.append(cell_code)
+            except SyntaxError:
+                pass
 
     if Qinfo is None:
         Qinfo = QinfoGenerate(Question, addfile)

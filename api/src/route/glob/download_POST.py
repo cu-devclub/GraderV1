@@ -61,7 +61,9 @@ def main():
 
     if FRL[0] == 0:
         hide = " AND Hide = 0"
-        if isCET(g.db, cur, Email, None, FID=None):
+
+        is_class_editor = isCET(g.db, cur, Email, None, FID=FRL[2])
+        if is_class_editor:
             hide = ""
         if not checkPermAddDown(FRL[2], Email, cur):
             return jsonify({
@@ -69,7 +71,7 @@ def main():
                 'msg': 'You do not have access to this file.',
                 'data': ""
             }), 200
-        if not isAccess(g.db, cur, public_ip, Email=Email, FID=FRL[2]):
+        if not (isAccess(g.db, cur, public_ip, Email=Email, FID=FRL[2]) or is_class_editor):
             return jsonify({
                 'success': False,
                 'msg': 'You do not have access to this file.',
