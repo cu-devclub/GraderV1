@@ -39,7 +39,7 @@ app = Flask(__name__)
 
 
 if not isDev:
-    CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": config['DOMAIN']}})
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": config['DOMAIN']}})
 else: 
     CORS(app, supports_credentials=True)
 
