@@ -234,7 +234,7 @@ function AssignList() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <style>
           {`
           @media (max-width: 768px) {
@@ -277,8 +277,8 @@ function AssignList() {
       </div>
 
       {/* <div className="card" style={{ marginLeft: 10 + 'em', marginRight: 10 + 'em' }}> */}
-      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
-        <div style={{ flexShrink: 0, backgroundColor: 'white' }}>
+      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
+        <div style={{ flexShrink: 0, backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #d3d3d3' }}>
             <div className="tab-scroll-container" style={{ display: 'flex' }}>
               <div style={{ padding: '10px 40px', fontWeight: 'bold', fontSize: '1.2rem', color: '#495057', borderBottom: '3px solid #df4d8e', cursor: 'pointer', marginBottom: '-2px' }}>
@@ -296,15 +296,15 @@ function AssignList() {
             <button type="button" className="btn btn-dark" style={{ borderRadius: '20px', padding: '8px 20px', fontWeight: 'bold', marginRight: '1.5rem', border: 'none' }} onClick={() => navigate("/Scan")}><QrCodeScan style={{ marginRight: '5px' }} /> Scan QR</button>
           </div>
         </div>
-        <div style={{ flexGrow: 1, overflowY: 'auto', overflowX: 'auto', paddingLeft: 0, paddingRight: 0, paddingBottom: '10px' }}>
-          <div style={{ minWidth: '900px' }}>
-            <div className="row text-muted" style={{ fontSize: '0.9rem', marginLeft: 0, marginRight: 0, marginBottom: '1rem', fontWeight: 'bold' }}>
-              <div className="col-1 text-center">Lab Number</div>
-              <div className="col" style={{ paddingLeft: '2rem' }}>Lab Name</div>
-              <div style={{ width: '130px', textAlign: 'center' }}>Status</div>
-              <div style={{ width: '220px', textAlign: 'center' }}>Publish</div>
-              <div style={{ width: '220px', textAlign: 'center' }}>Due</div>
-            </div>
+          <div style={{ flexGrow: 1, paddingLeft: 0, paddingRight: 0, paddingBottom: '10px' }}>
+            <div style={{ minWidth: '900px' }}>
+              <div className="row text-muted" style={{ fontSize: '0.9rem', marginLeft: 0, marginRight: 0, marginBottom: '1rem', fontWeight: 'bold', position: 'sticky', top: '166px', backgroundColor: 'white', zIndex: 10, paddingTop: '10px', paddingBottom: '10px', borderBottom: '2px solid #dee2e6', marginTop: '-10px' }}>
+                <div className="col-1 text-center">Lab Number</div>
+                <div className="col" style={{ paddingLeft: '2rem' }}>Lab Name</div>
+                <div style={{ width: '130px', textAlign: 'center' }}>Status</div>
+                <div style={{ width: '220px', textAlign: 'center' }}>Publish</div>
+                <div style={{ width: '220px', textAlign: 'center' }}>Due</div>
+              </div>
             <div>
               {assignmentsData && ((assignmentsData.length !== 0) && (
               assignmentsData.map(assign => {

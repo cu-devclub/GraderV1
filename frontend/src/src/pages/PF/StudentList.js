@@ -4,7 +4,7 @@ import withReactContent from 'sweetalert2-react-content';
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
-import { Download, Search, Funnel, Trash, PencilSquare } from 'react-bootstrap-icons';
+import { Download, Search, Funnel, FunnelFill, Trash, PencilSquare } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -54,6 +54,11 @@ function StudentList() {
   
   const [sections, setSections] = useState([]);
   const [checkedSections, setCheckedSections] = useState([])
+  const [showSectionFilter, setShowSectionFilter] = useState(false);
+
+  const [groups, setGroups] = useState([]);
+  const [checkedGroups, setCheckedGroups] = useState([]);
+  const [showGroupFilter, setShowGroupFilter] = useState(false);
 
   const [ClassInfo, setClassInfo] = useState({});
 
@@ -81,6 +86,10 @@ function StudentList() {
       });
       const dataname = await response.json();
       setshowname(dataname["data"]["Students"]);
+      if (dataname["data"]["Students"]) {
+        const gs = Array.from(new Set(dataname["data"]["Students"].map(s => s["Group"]).filter(Boolean))).sort();
+        setGroups(gs);
+      }
     } catch (error) {
       console.error('Error fetching user data:', error);
       // Display an error message to the user
@@ -101,6 +110,10 @@ function StudentList() {
         });
         const dataname = await response.json();
         setshowname(dataname["data"]["Students"]);
+        if (dataname["data"]["Students"]) {
+          const gs = Array.from(new Set(dataname["data"]["Students"].map(s => s["Group"]).filter(Boolean))).sort();
+          setGroups(gs);
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
         // Display an error message to the user
@@ -212,6 +225,14 @@ function StudentList() {
       setCheckedSections(checkedSections.filter((item) => item !== e))
     }else{
       setCheckedSections([...checkedSections, e])
+    }
+  }
+
+  const handleGroupCheckboxChange = (g) => {
+    if(checkedGroups.includes(g)){
+      setCheckedGroups(checkedGroups.filter((item) => item !== g))
+    }else{
+      setCheckedGroups([...checkedGroups, g])
     }
   }
 
@@ -346,7 +367,7 @@ function StudentList() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflowX: 'hidden', overflowY: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <style>
           {`
           @media (max-width: 768px) {
@@ -369,6 +390,71 @@ function StudentList() {
           .tab-scroll-container::-webkit-scrollbar {
               display: none;
           }
+            .filter-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                margin-top: 4px;
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+                padding: 10px;
+                z-index: 1000;
+                min-width: 160px;
+                white-space: normal;
+                text-align: left;
+            }
+            .filter-dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 8px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                color: #334155;
+                font-weight: 400;
+                transition: background-color 0.15s;
+            }
+            .filter-dropdown-item:hover {
+                background-color: #f8fafc;
+            }
+            .filter-pill {
+                width: 18px;
+                height: 18px;
+                border-radius: 4px;
+                border: 1.5px solid #cbd5e1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .filter-pill.selected {
+                background-color: #e25595;
+                border-color: #e25595;
+            }
+            .filter-icon-btn {
+                background: none;
+                border: none;
+                padding: 2px;
+                vertical-align: middle;
+                transition: color 0.15s;
+                color: #94a3b8;
+                margin-left: 4px;
+            }
+            .filter-icon-btn:hover {
+                color: #64748b;
+            }
+            .filter-icon-btn.active {
+                color: #e25595;
+            }
+            .sticky-table-header th {
+                position: sticky;
+                top: 166px;
+                background-color: white;
+                z-index: 10;
+                box-shadow: inset 0 -2px 0 #dee2e6;
+            }
           `}
       </style>
       <div style={{ flexShrink: 0 }}>
@@ -388,8 +474,8 @@ function StudentList() {
         )}
       </div>
 
-      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'hidden', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
-        <div style={{ flexShrink: 0, backgroundColor: 'white' }}>
+      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
+        <div style={{ flexShrink: 0, backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #d3d3d3' }}>
             <div className="tab-scroll-container" style={{ display: 'flex' }}>
               <div style={{ padding: '10px 40px', fontSize: '1.2rem', color: '#495057', cursor: 'pointer' }} onClick={() => navigate("/AssignList")}>
@@ -428,55 +514,76 @@ function StudentList() {
             </div>
           </div>
         </div>
-        <div style={{ flexGrow: 1, overflow: 'auto', paddingBottom: '10px' }}>
-          {/* Search input */}
-          <form className="d-flex" style={{marginBottom: "8px"}}>
-            <input className="form-control me-2" type="search" placeholder="Search ID or Name" aria-label="Search" onChange={handleSearch} />
-          </form>
-          <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '1.5rem', marginTop: '1rem' }}>
-            <b style={{ marginRight: '1rem', color: '#495057', marginTop: '2px', fontSize: '0.95rem' }}>Section:</b>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxWidth: '400px' }}>
-              {sections.map((section) => {
-                const isSelected = checkedSections.includes(section);
-                return (
-                  <button
-                    key={section}
-                    type="button"
-                    onClick={() => handleCheckboxChange(section)}
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '4px',
-                      border: isSelected ? '1px solid #e25595' : '1px solid #cbd5e1',
-                      backgroundColor: isSelected ? '#e25595' : 'white',
-                      color: isSelected ? 'white' : '#94a3b8',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease-in-out',
-                      padding: 0
-                    }}
-                  >
-                    {section}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        <div style={{ flexGrow: 1, paddingBottom: '10px' }}>
           {/* Loading indicator */}
-          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-          <div className='fixed_header'>
-          <table className="table" style={{ minWidth: '600px' }}>
-              <thead>
+          <div style={{ WebkitOverflowScrolling: 'touch' }}>
+            <div>
+            <table className="table" style={{ minWidth: '600px' }}>
+              <thead className="sticky-table-header">
                   <tr>
                       <th scope="col" className="col-1">#</th>
                       <th scope="col" className="col-2">Student ID</th>
                       <th scope="col">Name</th>
-                      <th scope="col" className="col-1 text-center">Section</th>
-                      <th scope="col" className="col-1 text-center">Group</th>
+                      <th scope="col" className="col-1 text-center">
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                            Section
+                            <button
+                                type="button"
+                                className={`filter-icon-btn ${checkedSections.length > 0 ? 'active' : ''}`}
+                                onClick={() => { setShowSectionFilter(!showSectionFilter); setShowGroupFilter(false); }}
+                            >
+                                {checkedSections.length > 0 ? <FunnelFill size={12} /> : <Funnel size={12} />}
+                            </button>
+                          </div>
+                          {showSectionFilter && (
+                              <>
+                                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowSectionFilter(false)} />
+                                  <div className="filter-dropdown">
+                                      {sections.map((section) => {
+                                          const isSelected = checkedSections.includes(section);
+                                          return (
+                                              <div key={section} className="filter-dropdown-item" onClick={() => handleCheckboxChange(section)}>
+                                                  <div className={`filter-pill ${isSelected ? 'selected' : ''}`}>
+                                                      {isSelected && <span style={{ color: 'white', fontSize: '11px', lineHeight: 1 }}>&#10003;</span>}
+                                                  </div>
+                                                  <span>{section}</span>
+                                              </div>
+                                          );
+                                      })}
+                                  </div>
+                              </>
+                          )}
+                      </th>
+                      <th scope="col" className="col-1 text-center">
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                            Group
+                            <button
+                                type="button"
+                                className={`filter-icon-btn ${checkedGroups.length > 0 ? 'active' : ''}`}
+                                onClick={() => { setShowGroupFilter(!showGroupFilter); setShowSectionFilter(false); }}
+                            >
+                                {checkedGroups.length > 0 ? <FunnelFill size={12} /> : <Funnel size={12} />}
+                            </button>
+                          </div>
+                          {showGroupFilter && (
+                              <>
+                                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowGroupFilter(false)} />
+                                  <div className="filter-dropdown">
+                                      {groups.map((group) => {
+                                          const isSelected = checkedGroups.includes(group);
+                                          return (
+                                              <div key={group} className="filter-dropdown-item" onClick={() => handleGroupCheckboxChange(group)}>
+                                                  <div className={`filter-pill ${isSelected ? 'selected' : ''}`}>
+                                                      {isSelected && <span style={{ color: 'white', fontSize: '11px', lineHeight: 1 }}>&#10003;</span>}
+                                                  </div>
+                                                  <span>{group}</span>
+                                              </div>
+                                          );
+                                      })}
+                                  </div>
+                              </>
+                          )}
+                      </th>
                       <th scope="col" className="col-1 text-center">Score</th>
                       <th scope="col" className="col-1 text-center">Edit</th>
                   </tr>
@@ -484,7 +591,9 @@ function StudentList() {
               <tbody>
           {showname.length !== 0 ? (
               showname.filter(element => {
-                if((element["ID"] + element["Name (English)"]).toLowerCase().includes(searchQuery.toLowerCase()) && (checkedSections.length === 0 || checkedSections.includes(element["Section"])))
+                if((element["ID"] + element["Name (English)"]).toLowerCase().includes(searchQuery.toLowerCase()) && 
+                   (checkedSections.length === 0 || checkedSections.includes(element["Section"])) &&
+                   (checkedGroups.length === 0 || checkedGroups.includes(element["Group"])))
                   return element;
                 return false
               }).map((element, index) => (
@@ -521,6 +630,18 @@ function StudentList() {
 
 
 
+
+      {/* Floating Search Island */}
+      <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', zIndex: 900, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', padding: '12px 24px', borderRadius: '30px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)', border: '1px solid rgba(255, 255, 255, 0.5)', display: 'flex', alignItems: 'center', width: '90%', maxWidth: '450px' }}>
+        <Search size={20} style={{ color: '#64748b', marginRight: '12px' }} />
+        <input 
+          type="search" 
+          placeholder="Search ID or Name" 
+          value={searchQuery}
+          onChange={handleSearch} 
+          style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '1.05rem', color: '#334155' }} 
+        />
+      </div>
 
       <div className={`modal fade ${showModal ? 'show' : ''}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style={{ display: showModal ? 'block' : 'none' }}>
         <div className="modal-dialog">
