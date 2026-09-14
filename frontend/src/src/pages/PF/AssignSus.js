@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-
-import { Funnel } from 'react-bootstrap-icons';
+import { ArrowLeftCircle, Funnel, FunnelFill } from 'react-bootstrap-icons';
 
 
 const host = `${process.env.REACT_APP_HOST}`
+
+const TYPE_LABELS = {
+    1: 'File not contain signature',
+    2: 'Signature is broken',
+    3: "Submit someone else's file",
+    4: 'Submit wrong question',
+    5: 'Cannot decrypt signature'
+};
 
 function Sentin() {
     const navigate = useNavigate();
@@ -19,18 +26,11 @@ function Sentin() {
 
     const [Sus, setSus] = useState(null);
 
-    const [showModal, setShowModal] = useState(false);
-
     const [SQ, setSQ] = useState([]);
     const [ST, setST] = useState([]);
-      
-    const handleOpenModal = () => {
-        setShowModal(true);
-    };
 
-    const handleCloseModal = () => {
-        setShowModal(false);
-    };
+    const [showQFilter, setShowQFilter] = useState(false);
+    const [showTFilter, setShowTFilter] = useState(false);
 
     const handleQuestionChange = (e) => {
         if(SQ.includes(e)){
@@ -93,75 +93,208 @@ function Sentin() {
         fetchSus()
     }, [LID, classId]);
 
+    const isQFiltered = Sus ? SQ.length < Sus['Q'].length : false;
+    const isTFiltered = Sus ? ST.length < Sus['Type'].length : false;
+
   return (
     <div>
+        <style>
+            {`
+            @media (max-width: 768px) {
+                .responsive-container {
+                    margin-left: 1rem !important;
+                    margin-right: 1rem !important;
+                }
+            }
+            .tab-scroll-container {
+                display: flex;
+                overflow-x: auto;
+                white-space: nowrap;
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+            .tab-scroll-container::-webkit-scrollbar {
+                display: none;
+            }
+            .filter-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                margin-top: 4px;
+                background: white;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+                padding: 10px;
+                z-index: 1000;
+                min-width: 160px;
+                white-space: normal;
+            }
+            .filter-dropdown-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 8px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                color: #334155;
+                font-weight: 400;
+                transition: background-color 0.15s;
+            }
+            .filter-dropdown-item:hover {
+                background-color: #f8fafc;
+            }
+            .filter-pill {
+                width: 18px;
+                height: 18px;
+                border-radius: 4px;
+                border: 1.5px solid #cbd5e1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                transition: all 0.2s;
+            }
+            .filter-pill.selected {
+                background-color: #e25595;
+                border-color: #e25595;
+            }
+            .filter-icon-btn {
+                background: none;
+                border: none;
+                padding: 2px;
+                cursor: pointer;
+                color: #94a3b8;
+                display: inline-flex;
+                align-items: center;
+                margin-left: 4px;
+                vertical-align: middle;
+                transition: color 0.15s;
+            }
+            .filter-icon-btn:hover {
+                color: #64748b;
+            }
+            .filter-icon-btn.active {
+                color: #e25595;
+            }
+            `}
+        </style>
         <Navbar />
         <br />
-        <div className="media d-flex align-items-center">
-            <span style={{ margin: '0 10px' }}></span>
-            <img className="mr-3" alt="thumbnail" src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3426/3426653.png"} style={{ width: '40px', height: '40px' }} />
-            <span style={{ margin: '0 10px' }}></span>
-                <div className="card" style={{ width: '30rem', padding: '10px' }}>
-                    <h5>{ClassInfo['ClassID']} {ClassInfo['ClassName']} {ClassInfo['ClassYear']}</h5>
-                    <h6>Instructor: {ClassInfo['Instructor']}</h6>
-                </div>
+        <div className="responsive-container" style={{ marginLeft: '10em', marginRight: '10em', marginTop: '1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', minHeight: '38px' }}>
+            <div style={{ color: '#e25595', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: 'bold' }} onClick={() => navigate("/AssignList")}>
+                <ArrowLeftCircle size={18} /> <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Back to assignment</span>
             </div>
-            <br />
-            <div className="card" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh"}}>
-                <div className="card-header">
-                    <div className="row" style={{marginBottom:"-5px"}}>
-                        <div className="col">
-                            <ul className="nav nav-tabs card-header-tabs">
-                                <li className="nav-item">
-                                    <button className="nav-link link" onClick={() => {navigate("/AssignEdit")}}>Edit</button>
-                                </li>
-                                <li className="nav-item">
-                                    <button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/Sentin")}} >Sent in</button>
-                                </li>
-                                <li className="nav-item">
-                                    <button className="nav-link active" >Suspicious</button>
-                                </li>
-                                <li className="nav-item">
-                                    { isExamFromServ ? (<button className="nav-link link" onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}} >Check in-out</button>) : ("")}
-                                </li>
-                            </ul>
+        </div>
+        <div className="card responsive-container" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh", border: 'none', boxShadow: 'none', overflow: (showQFilter || showTFilter) ? 'visible' : undefined}}>
+            <div style={{ backgroundColor: 'white' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #cbd5e1' }}>
+                    <div className="tab-scroll-container" style={{ display: 'flex', width: '100%' }}>
+                        <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Detail' } })}}>
+                            Detail
                         </div>
-                        <div className="col-md-2">
-                            <button className="btn btn-primary float-end" type="button" onClick={() => navigate("/AssignList")}>Back</button>
+                        <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Questions' } })}}>
+                            Questions
                         </div>
+                        <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Files' } })}}>
+                            Additional Files
+                        </div>
+                        <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/Sentin")}}>
+                            Submission
+                        </div>
+                        <div style={{ padding: '10px 40px', fontWeight: '600', fontSize: '1.05rem', color: '#1e293b', borderBottom: '2px solid #e25595', cursor: 'pointer', marginBottom: '-1px' }}>
+                            Suspicious
+                        </div>
+                        { isExamFromServ && (
+                            <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() =>{sessionStorage.setItem("LID", LID);sessionStorage.setItem("classId", classId);navigate("/CheckInOut")}}>
+                                Check in-out
+                            </div>
+                        )}
                     </div>
                 </div>
-                <div className="card-body" style={{ overflowY: 'scroll' }}>
-                    <button type="button" className="btn btn-outline-dark" onClick={handleOpenModal}><Funnel /> Filter</button>
-                {/* Loading indicator */}
-                    <div className='fixed_header'>
-                        <table className="table">
-                            <thead>
+            </div>
+                <div className="card-body" style={{ overflow: (showQFilter || showTFilter) ? 'visible' : 'auto' }}>
+                    <div style={{ overflowX: (showQFilter || showTFilter) ? 'visible' : 'auto', overflow: (showQFilter || showTFilter) ? 'visible' : undefined, WebkitOverflowScrolling: 'touch' }}>
+                    <div className='fixed_header' style={{ overflow: (showQFilter || showTFilter) ? 'visible' : undefined }}>
+                        <table className="table" style={{ minWidth: '700px', overflow: (showQFilter || showTFilter) ? 'visible' : undefined }}>
+                            <thead style={{ overflow: (showQFilter || showTFilter) ? 'visible' : undefined }}>
                                 <tr>
-                                    <th scope="col" className="col-1">#</th>
-                                    <th scope="col" className="col-1">Student ID</th>
-                                    <th scope="col" className='col-1'>Question</th>
-                                    <th scope="col" className='col-1'>Type</th>
+                                    <th scope="col" style={{ width: '50px' }}>#</th>
+                                    <th scope="col" style={{ width: '120px' }}>Student ID</th>
+                                    <th scope="col" style={{ width: '120px', position: 'relative' }}>
+                                        Question
+                                        <button
+                                            type="button"
+                                            className={`filter-icon-btn ${isQFiltered ? 'active' : ''}`}
+                                            onClick={() => { setShowQFilter(!showQFilter); setShowTFilter(false); }}
+                                        >
+                                            {isQFiltered ? <FunnelFill size={12} /> : <Funnel size={12} />}
+                                        </button>
+                                        {showQFilter && Sus && (
+                                            <>
+                                                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowQFilter(false)} />
+                                                <div className="filter-dropdown">
+                                                    {Sus['Q'].map((q) => {
+                                                        const isSelected = SQ.includes(q);
+                                                        return (
+                                                            <div key={q} className="filter-dropdown-item" onClick={() => handleQuestionChange(q)}>
+                                                                <div className={`filter-pill ${isSelected ? 'selected' : ''}`}>
+                                                                    {isSelected && <span style={{ color: 'white', fontSize: '11px', lineHeight: 1 }}>&#10003;</span>}
+                                                                </div>
+                                                                <span>Question {q}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        )}
+                                    </th>
+                                    <th scope="col" style={{ width: '220px', position: 'relative' }}>
+                                        Type
+                                        <button
+                                            type="button"
+                                            className={`filter-icon-btn ${isTFiltered ? 'active' : ''}`}
+                                            onClick={() => { setShowTFilter(!showTFilter); setShowQFilter(false); }}
+                                        >
+                                            {isTFiltered ? <FunnelFill size={12} /> : <Funnel size={12} />}
+                                        </button>
+                                        {showTFilter && Sus && (
+                                            <>
+                                                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowTFilter(false)} />
+                                                <div className="filter-dropdown" style={{ minWidth: '240px' }}>
+                                                    {Sus['Type'].map((t) => {
+                                                        const isSelected = ST.includes(t);
+                                                        return (
+                                                            <div key={t} className="filter-dropdown-item" onClick={() => handleTypeChange(t)}>
+                                                                <div className={`filter-pill ${isSelected ? 'selected' : ''}`}>
+                                                                    {isSelected && <span style={{ color: 'white', fontSize: '11px', lineHeight: 1 }}>&#10003;</span>}
+                                                                </div>
+                                                                <span>{TYPE_LABELS[t] || `Type ${t}`}</span>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </>
+                                        )}
+                                    </th>
                                     <th scope="col">Reason</th>
-                                    <th scope="col" className='col-2'>Timestamp</th>
-                                    {/* <th scope="col" className="col-1 text-center">Type</th> */}
+                                    <th scope="col" style={{ width: '180px' }}>Timestamp</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {Sus && Sus['Sus'].length !== 0 ? (
                                     Sus['Sus'].filter(element => (
                                         SQ.includes(element["QID"]) && ST.includes(element["Type"])
-                                        // (element["UID"] + element["Name"]).toLowerCase().includes(searchQuery.toLowerCase())
                                     )).map((element, index) => (
                                         <React.Fragment key={index}>
                                             <tr>
                                                 <th scope="row">{index + 1}</th>
                                                 <td>{element["UID"]}</td>
                                                 <td>{element["QID"]}</td>
-                                                <td>{element["Type"]}</td>
+                                                <td>{TYPE_LABELS[element["Type"]] || element["Type"]}</td>
                                                 <td>{element["Reason"]}</td>
                                                 <td>{element["Timestamp"]}</td>
-                                                {/* <td className='text-center'></td> */}
                                             </tr>
                                         </React.Fragment>
                                     ))
@@ -175,55 +308,6 @@ function Sentin() {
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-            <div className={`modal fade ${showModal ? 'show' : ''}`} tabIndex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style={{ display: showModal ? 'block' : 'none' }}>
-                <div className="modal-dialog">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <h5 className="modal-title"><Funnel /> Filter</h5>
-                            <button type="button" className="btn-close" onClick={handleCloseModal} aria-label="Close"></button>
-                        </div>
-                        <div className="modal-body">
-                            {Sus ? (
-                                <div>
-                                    <b>Question:</b><br/>
-                                    {Sus['Q'].map((element) => (
-                                        <div key={element} className="form-check form-check-inline">
-                                            <input
-                                                className="form-check-input"
-                                                type="checkbox"
-                                                id={`inlineCheckbox${element}`}
-                                                value={element}
-                                                checked={SQ.includes(element)}
-                                                onChange={() => handleQuestionChange(element)}
-                                            />
-                                            <label className="form-check-label" htmlFor={`inlineCheckbox${element}`}>
-                                                {element}
-                                            </label>
-                                        </div>
-                                    ))}
-                                    <br/><b>Type:</b><br/>
-                                    {Sus['Type'].map((element) => (
-                                        <div key={element} className="form-check form-check-inline">
-                                            <input
-                                                className="form-check-input"
-                                                type="checkbox"
-                                                id={`inlineCheckbox${element}`}
-                                                value={element}
-                                                checked={ST.includes(element)}
-                                                onChange={() => handleTypeChange(element)}
-                                            />
-                                            <label className="form-check-label" htmlFor={`inlineCheckbox${element}`}>
-                                                {element}
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div>Loading</div>
-                            )}
-                        </div>
                     </div>
                 </div>
             </div>

@@ -6,7 +6,7 @@ import os
 config = {**dotenv_values("config/.env"), **os.environ}
 
 # Unescape literal \n if passed via environment variables
-for key in ("PRIKEY", "PUBKEY"):
+for key in ("PRIKEY", "PUBKEY", "AUTH_PRIKEY"):
     if key in config and isinstance(config[key], str) and "\\n" in config[key]:
         config[key] = config[key].replace("\\n", "\n")
 

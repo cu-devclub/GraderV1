@@ -81,8 +81,8 @@ func main() {
 	r.Use(sessions.Sessions("mysession", store))
 
 	// r.GET("/", handleMain)
-	r.GET("/auth/login", handleGoogleLogin)
-	r.GET("/auth/callback", handleGoogleCallback)
+	r.GET("/login", handleGoogleLogin)
+	r.GET("/callback", handleGoogleCallback)
 
 	r.Run(":5050")
 }
@@ -144,5 +144,9 @@ func handleGoogleCallback(c *gin.Context) {
 
 	encodedCiphertext := base64.URLEncoding.EncodeToString(ciphertext)
 
-	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("/callback?credential=%s", encodedCiphertext))
+	frontendCallback := os.Getenv("FRONTEND_CALLBACK_URL")
+	if frontendCallback == "" {
+		frontendCallback = "https://sci.cugrader.com/callback"
+	}
+	c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("%s?credential=%s", frontendCallback, encodedCiphertext))
 }
