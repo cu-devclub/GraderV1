@@ -126,7 +126,7 @@ function Index() {
   }, [classId]);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
       <style>
           {`
           @media (max-width: 768px) {
@@ -168,20 +168,20 @@ function Index() {
         )}
       </div>
 
-      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
-        <div style={{ flexShrink: 0, backgroundColor: 'white' }}>
+      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
+        <div style={{ flexShrink: 0, backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #d3d3d3' }}>
             <div className="tab-scroll-container" style={{ display: 'flex' }}>
               <div style={{ padding: '10px 40px', fontWeight: 'bold', fontSize: '1.2rem', color: '#495057', borderBottom: '3px solid #df4d8e', cursor: 'pointer', marginBottom: '-2px' }}>
-                Assignments
+                Lab
               </div>
-              <div style={{ padding: '10px 40px', fontSize: '1.2rem', color: '#495057', cursor: 'pointer' }} onClick={() => navigate("/Portfolio")}>
+              <div style={{ padding: '10px 40px', fontSize: '1.2rem', color: '#495057', cursor: 'pointer' }} onClick={() => navigate("/portfolio")}>
                 Portfolio
               </div>
             </div>
           </div>
         </div>
-        <div style={{ flexGrow: 1, overflowY: 'auto', overflowX: 'auto', paddingLeft: 0, paddingRight: 0, paddingBottom: '10px', paddingTop: '1rem' }}>
+        <div style={{ flexGrow: 1, overflowX: 'auto', paddingLeft: 0, paddingRight: 0, paddingBottom: '10px', paddingTop: '1rem' }}>
           <div style={{ minWidth: '900px' }}>
             <div className="row text-muted" style={{ fontSize: '0.9rem', marginLeft: 0, marginRight: 0, marginBottom: '1rem', fontWeight: 'bold' }}>
               <div className="col-1 text-center">Lab Number</div>

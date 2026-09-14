@@ -63,8 +63,6 @@ function Sentin() {
                 const data = await response.json();
                 if(data.success){
                     setSus(data.data);
-                    setSQ(data.data['Q'])
-                    setST(data.data['Type'])
                 }
             } catch (error) {
                 console.error('Error fetching suspicious data:', error);
@@ -93,8 +91,8 @@ function Sentin() {
         fetchSus()
     }, [LID, classId]);
 
-    const isQFiltered = Sus ? SQ.length < Sus['Q'].length : false;
-    const isTFiltered = Sus ? ST.length < Sus['Type'].length : false;
+    const isQFiltered = SQ.length > 0;
+    const isTFiltered = ST.length > 0;
 
   return (
     <div>
@@ -178,6 +176,13 @@ function Sentin() {
             .filter-icon-btn.active {
                 color: #e25595;
             }
+            .sticky-table-header th {
+                position: sticky;
+                top: 94px;
+                background-color: white;
+                z-index: 10;
+                box-shadow: inset 0 -2px 0 #cbd5e1;
+            }
             `}
         </style>
         <Navbar />
@@ -187,8 +192,8 @@ function Sentin() {
                 <ArrowLeftCircle size={18} /> <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Back to assignment</span>
             </div>
         </div>
-        <div className="card responsive-container" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh", border: 'none', boxShadow: 'none', overflow: (showQFilter || showTFilter) ? 'visible' : undefined}}>
-            <div style={{ backgroundColor: 'white' }}>
+        <div className="card responsive-container" style={{ marginLeft: '10em', marginRight: '10em', border: 'none', boxShadow: 'none' }}>
+            <div style={{ backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #cbd5e1' }}>
                     <div className="tab-scroll-container" style={{ display: 'flex', width: '100%' }}>
                         <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Detail' } })}}>
@@ -214,23 +219,25 @@ function Sentin() {
                     </div>
                 </div>
             </div>
-                <div className="card-body" style={{ overflow: (showQFilter || showTFilter) ? 'visible' : 'auto' }}>
-                    <div style={{ overflowX: (showQFilter || showTFilter) ? 'visible' : 'auto', overflow: (showQFilter || showTFilter) ? 'visible' : undefined, WebkitOverflowScrolling: 'touch' }}>
-                    <div className='fixed_header' style={{ overflow: (showQFilter || showTFilter) ? 'visible' : undefined }}>
-                        <table className="table" style={{ minWidth: '700px', overflow: (showQFilter || showTFilter) ? 'visible' : undefined }}>
-                            <thead style={{ overflow: (showQFilter || showTFilter) ? 'visible' : undefined }}>
+                <div className="card-body">
+                    <div style={{ WebkitOverflowScrolling: 'touch' }}>
+                    <div>
+                        <table className="table" style={{ minWidth: '700px' }}>
+                            <thead className="sticky-table-header">
                                 <tr>
                                     <th scope="col" style={{ width: '50px' }}>#</th>
                                     <th scope="col" style={{ width: '120px' }}>Student ID</th>
-                                    <th scope="col" style={{ width: '120px', position: 'relative' }}>
-                                        Question
-                                        <button
-                                            type="button"
-                                            className={`filter-icon-btn ${isQFiltered ? 'active' : ''}`}
-                                            onClick={() => { setShowQFilter(!showQFilter); setShowTFilter(false); }}
-                                        >
-                                            {isQFiltered ? <FunnelFill size={12} /> : <Funnel size={12} />}
-                                        </button>
+                                    <th scope="col" style={{ width: '120px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            Question
+                                            <button
+                                                type="button"
+                                                className={`filter-icon-btn ${isQFiltered ? 'active' : ''}`}
+                                                onClick={() => { setShowQFilter(!showQFilter); setShowTFilter(false); }}
+                                            >
+                                                {isQFiltered ? <FunnelFill size={12} /> : <Funnel size={12} />}
+                                            </button>
+                                        </div>
                                         {showQFilter && Sus && (
                                             <>
                                                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowQFilter(false)} />
@@ -250,15 +257,17 @@ function Sentin() {
                                             </>
                                         )}
                                     </th>
-                                    <th scope="col" style={{ width: '220px', position: 'relative' }}>
-                                        Type
-                                        <button
-                                            type="button"
-                                            className={`filter-icon-btn ${isTFiltered ? 'active' : ''}`}
-                                            onClick={() => { setShowTFilter(!showTFilter); setShowQFilter(false); }}
-                                        >
-                                            {isTFiltered ? <FunnelFill size={12} /> : <Funnel size={12} />}
-                                        </button>
+                                    <th scope="col" style={{ width: '220px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                            Type
+                                            <button
+                                                type="button"
+                                                className={`filter-icon-btn ${isTFiltered ? 'active' : ''}`}
+                                                onClick={() => { setShowTFilter(!showTFilter); setShowQFilter(false); }}
+                                            >
+                                                {isTFiltered ? <FunnelFill size={12} /> : <Funnel size={12} />}
+                                            </button>
+                                        </div>
                                         {showTFilter && Sus && (
                                             <>
                                                 <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowTFilter(false)} />
@@ -285,7 +294,8 @@ function Sentin() {
                             <tbody>
                                 {Sus && Sus['Sus'].length !== 0 ? (
                                     Sus['Sus'].filter(element => (
-                                        SQ.includes(element["QID"]) && ST.includes(element["Type"])
+                                        (SQ.length === 0 || SQ.includes(element["QID"])) && 
+                                        (ST.length === 0 || ST.includes(element["Type"]))
                                     )).map((element, index) => (
                                         <React.Fragment key={index}>
                                             <tr>
