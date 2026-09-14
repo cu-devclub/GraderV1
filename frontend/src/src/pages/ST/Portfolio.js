@@ -24,8 +24,36 @@ ChartJS.register(
     Legend
 );
 
-const host = `${process.env.REACT_APP_HOST}`
-
+const host = `${process.env.REACT_APP_HOST}`;
+const getCourseBannerStyle = (courseStr) => {
+  if (!courseStr) return {};
+  let hash = 0;
+  for (let i = 0; i < courseStr.length; i++) {
+    hash = courseStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 50 + Math.abs(hash >> 2) % 70) % 360; 
+  const h3 = (h2 + 50 + Math.abs(hash >> 4) % 70) % 360; 
+  const color1 = `hsl(${h1}, 85%, 82%)`;
+  const color2 = `hsl(${h2}, 85%, 82%)`;
+  const color3 = `hsl(${h3}, 85%, 82%)`;
+  const color4 = `hsl(${(h1 + 120) % 360}, 80%, 86%)`;
+  const color5 = `hsl(${(h2 + 180) % 360}, 80%, 88%)`;
+  const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.65'/%3E%3C/svg%3E")`;
+  const meshGradient = `
+    radial-gradient(at 10% 20%, ${color1} 0%, transparent 60%),
+    radial-gradient(at 90% 10%, ${color2} 0%, transparent 60%),
+    radial-gradient(at 20% 90%, ${color3} 0%, transparent 60%),
+    radial-gradient(at 80% 90%, ${color4} 0%, transparent 60%),
+    radial-gradient(at 50% 50%, ${color5} 0%, transparent 60%)
+  `;
+  return {
+    backgroundColor: `hsl(${h1}, 60%, 90%)`,
+    backgroundImage: `${noiseSvg}, ${meshGradient}`,
+    backgroundBlendMode: 'overlay, normal, normal, normal, normal, normal',
+    color: '#374151',
+  };
+};
 function Index() {
   const navigate = useNavigate();
 
@@ -114,42 +142,63 @@ function Index() {
 
 
   return (
-    
-      <div className="App">
-        <Navbar></Navbar> 
-          <br></br>
-          {ClassInfo && (
-          <div className="media d-flex align-items-center">
-            <span style={{ margin: '0 10px' }}></span>
-            <img className="mr-3" alt="thumbnail" src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3426/3426653.png"} style={{ width: '40px', height: '40px' }} />
-            <span style={{ margin: '0 10px' }}></span>
-            <div className="card" style={{ width: '30rem', padding: '10px' }}>
-              <h5>{ClassInfo['ClassID']} {ClassInfo['ClassName']} {ClassInfo['ClassYear']}</h5>
-              <h6>Instructor: {ClassInfo['Instructor']}</h6>
-            </div>
-          </div>
-          )}
-          <br />
-
-          <div className="card" style={{ marginLeft: 10 +'em', marginRight: 10 + 'em' }}>
-            <div className="card-header">
-              <div className="row" style={{marginBottom:"-5px"}}>
-                <div className="col">
-                  <ul className="nav nav-tabs card-header-tabs">
-                    <li className="nav-item">
-                      <button className="nav-link link" onClick={() => {navigate("/class")}}>Assignments</button>
-                    </li>
-                    <li className="nav-item">
-                      <button className="nav-link active">Portfolio</button>
-                    </li>
-                  </ul>
-                </div>
-                <div className="col-md-1">
-                  <button type="button" onClick={() => navigate("/")} className="btn btn-primary float-end">Back</button>
-                </div>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <style>
+          {`
+          @media (max-width: 768px) {
+              .responsive-container {
+                  margin-left: 1rem !important;
+                  margin-right: 1rem !important;
+              }
+              .responsive-banner {
+                  padding-left: 1rem !important;
+                  padding-right: 1rem !important;
+              }
+          }
+          .tab-scroll-container {
+              display: flex;
+              overflow-x: auto;
+              white-space: nowrap;
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+          }
+          .tab-scroll-container::-webkit-scrollbar {
+              display: none;
+          }
+          `}
+      </style>
+      <div style={{ flexShrink: 0 }}>
+        <Navbar />
+        {ClassInfo && (
+        <div className="responsive-banner" style={{ ...getCourseBannerStyle(ClassInfo['ClassID'] + ClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+            <div>
+              <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{ClassInfo['ClassName']}</h2>
+              <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
+                {ClassInfo['ClassID']} • {ClassInfo['ClassYear']}
               </div>
             </div>
-            <div className="card-body">
+          </div>
+        </div>
+        )}
+      </div>
+
+      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
+        <div style={{ flexShrink: 0, backgroundColor: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #d3d3d3' }}>
+            <div className="tab-scroll-container" style={{ display: 'flex' }}>
+              <div style={{ padding: '10px 40px', fontSize: '1.2rem', color: '#495057', cursor: 'pointer' }} onClick={() => navigate("/class")}>
+                Assignments
+              </div>
+              <div style={{ padding: '10px 40px', fontWeight: 'bold', fontSize: '1.2rem', color: '#495057', borderBottom: '3px solid #df4d8e', cursor: 'pointer', marginBottom: '-2px' }}>
+                Portfolio
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style={{ flexGrow: 1, overflowY: 'auto', overflowX: 'auto', paddingLeft: 0, paddingRight: 0, paddingBottom: '10px', paddingTop: '2rem' }}>
+          <div style={{ minWidth: '900px' }}>
                 {Rank ? (
                 <div className='row' style={{width: "100%"}}>
                     <div className='col'>
@@ -183,9 +232,10 @@ function Index() {
                 ) : (
                     <div>Loading</div>
                 )}
-            </div>
+          </div>
         </div>
       </div>
+    </div>
   );
 }
 

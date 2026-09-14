@@ -65,6 +65,15 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+
+    location /api {
+        set $test_backend_upstream ${TEST_BACKEND_URL}/;
+        proxy_pass http://$test_backend_upstream;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
 }
 
 server {
@@ -85,7 +94,7 @@ server {
     location ~* /(phpmyadmin|myadmin|pma|dbadmin) { deny all; return 403; }
 
     # --- API Proxies ---
-    location /api {
+    location / {
         set $api_upstream ${API_URL};
         proxy_pass http://$api_upstream;
         proxy_set_header Host $host;
@@ -93,8 +102,27 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
+}
 
-    location /auth {
+server {
+    listen 443 ssl;
+    server_name auth.${DOMAIN_NAME};
+
+    ssl_certificate /etc/letsencrypt/live/sci.${DOMAIN_NAME}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/sci.${DOMAIN_NAME}/privkey.pem;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_prefer_server_ciphers on;
+
+    # --- Security Rules ---
+    location ~* /latest/meta-data { deny all; return 403; }
+    location ~ /\.(?!well-known)  { deny all; return 403; }
+    location ~* \.(env|bak|config|sql|yaml|yml|json|lock)$ { deny all; return 403; }
+    location ~* /(wp-admin|wp-login\.php|xmlrpc\.php) { deny all; return 444; }
+    location ~* /(phpmyadmin|myadmin|pma|dbadmin) { deny all; return 403; }
+
+    # --- API Proxies ---
+    location / {
         set $auth_upstream ${AUTH_URL};
         proxy_pass http://$auth_upstream;
         proxy_set_header Host $host;

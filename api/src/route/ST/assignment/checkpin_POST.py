@@ -115,7 +115,19 @@ def main():
     #         'data': ""
     #     }), 200
 
-    # check if pin cxorrect
+    
+    # Check if publish time is older than 30 minutes
+    if publish:
+        time_diff = (now - publish.replace(tzinfo=tz)).total_seconds() / 60.0
+        if time_diff > 30:
+            return jsonify({
+                'success': False,
+                'msg': 'Pin is no longer available please use QR instead.',
+                'data': ""
+            }), 200
+
+
+    # check if pin correct
     if Pin == exam_pin:
         query = "INSERT INTO `checkout` (`UID`, `LID`, `CSYID`, ip) VALUES (%s, %s, %s, %s);"
         cur.execute(query, (Email.split('@')[0], LID, CSYID, public_ip))
@@ -125,16 +137,6 @@ def main():
             'msg': 'Success',
             'data': ""
         }), 200
-
-    # Check if publish time is older than 30 minutes
-    if publish:
-        time_diff = (now - publish).total_seconds() / 60.0
-        if time_diff > 30:
-            return jsonify({
-                'success': False,
-                'msg': 'Pin is no longer available please use QR instead.',
-                'data': ""
-            }), 200
 
     # if not update attemp
     if attempt_count == 0:

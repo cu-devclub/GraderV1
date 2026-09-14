@@ -10,8 +10,9 @@ services:
     environment:
       DOMAIN_NAME: ${DOMAIN_NAME:-example.com}
       FRONTEND_URL: ${FRONTEND_URL:-frontend:80}
-      TEST_FRONTEND_URL: ${TEST_FRONTEND_URL:-test-frontend:4000}
+      TEST_FRONTEND_URL: ${TEST_FRONTEND_URL:-test-frontend:80}
       API_URL: ${API_URL:-backend:5000}
+      TEST_BACKEND_URL: ${TEST_BACKEND_URL:-test-backend:5000}
       AUTH_URL: ${AUTH_URL:-auth:5050}
     volumes:
       - ${LETSENCRYPT_PATH:-/etc/letsencrypt}:/etc/letsencrypt:ro
@@ -42,7 +43,9 @@ services:
       DOMAIN: ${DOMAIN:-https://sci.cugrader.com}
       PUBKEY: ${ASSIGNMENT_RSA_PUBLIC_KEY:-${PUBKEY}}
       PRIKEY: ${ASSIGNMENT_RSA_PRIVATE_KEY:-${PRIKEY}}
+      AUTH_PRIKEY: ${AUTHEN_RSA_PRIVATE_KEY:-${PRIKEY}}
       PYTHONUNBUFFERED: "1"
+      TZ: Asia/Bangkok
     networks:
       - grader-network
     labels:
@@ -66,9 +69,23 @@ services:
     environment:
       COOKIE_SECRET: ${SESSION_COOKIE_SECRET_KEY:-${COOKIE_SECRET}}
       PUBKEY: ${AUTHEN_RSA_PUBLIC_KEY:-${PUBKEY}}
+      FRONTEND_CALLBACK_URL: ${FRONTEND_CALLBACK_URL:-https://sci.${DOMAIN_NAME:-cugrader.com}/callback}
     volumes:
-      - ${CLIENT_SECRETS_PATH:-./auth/client_secrets.json}:/usr/src/app/client_secrets.json:ro
+      - ${CLIENT_SECRETS_PATH:-./client_secrets.json}:/usr/src/app/client_secrets.json:ro
     networks:
       - grader-network
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower:latest
+    container_name: watchtower
+    restart: unless-stopped
+    environment:
+      DOCKER_API_VERSION: 1.44
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    command:
+      - --interval
+      - "60"
+      - --cleanup

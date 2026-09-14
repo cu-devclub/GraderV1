@@ -1,13 +1,49 @@
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content';
 
-import React, { useState, useEffect } from 'react';
-import Navbar from '../../components/Navbar';
+import React, { useState, useEffect, useCallback } from 'react';
+import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
+import { Download, Search, Funnel, Trash, PencilSquare } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
-import {PencilSquare} from 'react-bootstrap-icons'
 
 const host = `${process.env.REACT_APP_HOST}`
+
+const getCourseBannerStyle = (courseStr) => {
+  if (!courseStr) return {};
+  
+  let hash = 0;
+  for (let i = 0; i < courseStr.length; i++) {
+    hash = courseStr.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  
+  const h1 = Math.abs(hash) % 360;
+  const h2 = (h1 + 50 + Math.abs(hash >> 2) % 70) % 360; 
+  const h3 = (h2 + 50 + Math.abs(hash >> 4) % 70) % 360; 
+  
+  const color1 = `hsl(${h1}, 85%, 82%)`;
+  const color2 = `hsl(${h2}, 85%, 82%)`;
+  const color3 = `hsl(${h3}, 85%, 82%)`;
+  const color4 = `hsl(${(h1 + 120) % 360}, 80%, 86%)`;
+  const color5 = `hsl(${(h2 + 180) % 360}, 80%, 88%)`;
+
+  const noiseSvg = `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.65'/%3E%3C/svg%3E")`;
+
+  const meshGradient = `
+    radial-gradient(at 10% 20%, ${color1} 0%, transparent 60%),
+    radial-gradient(at 90% 10%, ${color2} 0%, transparent 60%),
+    radial-gradient(at 20% 90%, ${color3} 0%, transparent 60%),
+    radial-gradient(at 80% 90%, ${color4} 0%, transparent 60%),
+    radial-gradient(at 50% 50%, ${color5} 0%, transparent 60%)
+  `;
+
+  return {
+    backgroundColor: `hsl(${h1}, 60%, 90%)`,
+    backgroundImage: `${noiseSvg}, ${meshGradient}`,
+    backgroundBlendMode: 'overlay, normal, normal, normal, normal, normal',
+    color: '#374151',
+  };
+};
 
 function StudentList() {
   const navigate = useNavigate();
@@ -22,6 +58,7 @@ function StudentList() {
   const [ClassInfo, setClassInfo] = useState({});
 
   const [showModal, setShowModal] = useState(false);
+  const [showExportDropdown, setShowExportDropdown] = useState(false);
   const [isEdit, setIsEdit] = useState(false);
   const [UID,setUID] = useState("");
   const [Name,setName] = useState("");
@@ -229,6 +266,7 @@ function StudentList() {
           title: responseData["msg"],
           icon: "success"
         })
+        setShowModal(false);
         fetchName()
       }else{
         withReactContent(Swal).fire({
@@ -283,6 +321,7 @@ function StudentList() {
           title: responseData["msg"],
           icon: "success"
         })
+        setShowModal(false);
         fetchName()
       }else{
         withReactContent(Swal).fire({
@@ -307,73 +346,130 @@ function StudentList() {
   };
 
   return (
-    <div>
-      <Navbar />
-      <br />
-      <div className="media d-flex align-items-center">
-        <span style={{ margin: '0 10px' }}></span>
-        <img className="mr-3" alt="thumbnail" src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3426/3426653.png"} style={{ width: '40px', height: '40px' }} />
-        <span style={{ margin: '0 10px' }}></span>
-        <div className="card" style={{ width: '30rem', padding: '10px' }}>
-          <h5>{ClassInfo['ClassID']} {ClassInfo['ClassName']} {ClassInfo['ClassYear']}</h5>
-          <h6>Instructor: {ClassInfo['Instructor']}</h6>
-        </div>
-      </div>
-      <br />
-      <div className="card" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh"}}>
-        <div className="card-header">
-          {/* <div className="row" style={{marginBottom:"-5px"}}>
-            <div className='col'>
-              <h5>Student Name List</h5>
-            </div>
-            <div className='col-md-2'>
-              <button type="button" className="btn btn-primary float-end" onClick={() => navigate("/AssignList")}>Back</button>
-            </div>
-          </div> */}
-          <div className="row" style={{marginBottom:"-5px"}}>
-            <div className="col">
-              <ul className="nav nav-tabs card-header-tabs">
-                <li className="nav-item">
-                  <button className="nav-link link" onClick={() => navigate("/AssignList")}>Assignments</button>
-                </li>
-                <li className="nav-item">
-                  <button className="nav-link active">Student List</button>
-                </li>
-                <button style={{marginLeft: "1.5rem"}} className="btn btn-outline-success" type="button" id="button-addon2" onClick={() => handleAddStudent()} >+ Add</button>
-              </ul>
-            </div>
-            <div className="col-md-4">
-              <button className="btn btn-primary float-end" type="button" style={{marginLeft:"20px"}} onClick={() => navigate("/")}>Back</button>
-              <button className="btn btn-secondary float-end" type="button" style={{ marginLeft: '20px' }} onClick={handleExport}>Export</button>
-              <button className="btn btn-secondary float-end" type="button" style={{ marginLeft: '20px' }} onClick={handleExportSepQ}>Export questions</button>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflowX: 'hidden', overflowY: 'hidden' }}>
+      <style>
+          {`
+          @media (max-width: 768px) {
+              .responsive-container {
+                  margin-left: 1rem !important;
+                  margin-right: 1rem !important;
+              }
+              .responsive-banner {
+                  padding-left: 1rem !important;
+                  padding-right: 1rem !important;
+              }
+          }
+          .tab-scroll-container {
+              display: flex;
+              overflow-x: auto;
+              white-space: nowrap;
+              -ms-overflow-style: none;
+              scrollbar-width: none;
+          }
+          .tab-scroll-container::-webkit-scrollbar {
+              display: none;
+          }
+          `}
+      </style>
+      <div style={{ flexShrink: 0 }}>
+        <Navbar />
+        {ClassInfo && (
+        <div style={{ ...getCourseBannerStyle(ClassInfo['ClassID'] + ClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+            <div>
+              <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{ClassInfo['ClassName']}</h2>
+              <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
+                {ClassInfo['ClassID']} • {ClassInfo['ClassYear']}
+              </div>
             </div>
           </div>
         </div>
-        <div className="card-body" style={{ overflowY: 'scroll' }}>
+        )}
+      </div>
+
+      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', overflowY: 'hidden', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
+        <div style={{ flexShrink: 0, backgroundColor: 'white' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #d3d3d3' }}>
+            <div className="tab-scroll-container" style={{ display: 'flex' }}>
+              <div style={{ padding: '10px 40px', fontSize: '1.2rem', color: '#495057', cursor: 'pointer' }} onClick={() => navigate("/AssignList")}>
+                Assignments
+              </div>
+              <div style={{ padding: '10px 40px', fontWeight: 'bold', fontSize: '1.2rem', color: '#495057', borderBottom: '3px solid #df4d8e', cursor: 'pointer', marginBottom: '-2px' }}>
+                Students
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: '10px', marginRight: '1.5rem', marginBottom: '5px' }}>
+              {/* Export buttons moved */}
+            </div>
+          </div>
+          <div style={{ paddingTop: '1rem', paddingBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button style={{marginLeft: "1.5rem", backgroundColor: "#e25595", color: "white", border: "none", borderRadius: "20px", padding: "8px 20px"}} type="button" onClick={() => handleAddStudent()} >+ Add Student</button>
+            
+            <div className="dropdown" style={{ marginRight: '1.5rem', position: 'relative' }}>
+              <button 
+                className="btn btn-outline-secondary dropdown-toggle" 
+                style={{ borderRadius: '20px', padding: '8px 20px', display: 'flex', alignItems: 'center', gap: '8px' }} 
+                type="button" 
+                onClick={() => setShowExportDropdown(!showExportDropdown)}
+              >
+                <Download size={18} />
+                Export
+              </button>
+              {showExportDropdown && (
+                <>
+                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }} onClick={() => setShowExportDropdown(false)}></div>
+                  <ul className="dropdown-menu dropdown-menu-end shadow-sm show" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '8px', borderRadius: '12px', border: 'none', padding: '8px', zIndex: 1000, minWidth: '200px' }}>
+                    <li><button className="dropdown-item" style={{ borderRadius: '8px' }} type="button" onClick={() => { setShowExportDropdown(false); handleExport(); }}>Total scores</button></li>
+                    <li><button className="dropdown-item" style={{ borderRadius: '8px' }} type="button" onClick={() => { setShowExportDropdown(false); handleExportSepQ(); }}>Scores by question</button></li>
+                  </ul>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+        <div style={{ flexGrow: 1, overflow: 'auto', paddingBottom: '10px' }}>
           {/* Search input */}
           <form className="d-flex" style={{marginBottom: "8px"}}>
             <input className="form-control me-2" type="search" placeholder="Search ID or Name" aria-label="Search" onChange={handleSearch} />
           </form>
-          <b>Section: </b>
-          {sections.map((section) => (
-            <div key={section} className="form-check form-check-inline">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id={`inlineCheckbox${section}`}
-                checked={checkedSections.includes(section)}
-                onChange={() => handleCheckboxChange(section)}
-              />
-              <label className="form-check-label" htmlFor={`inlineCheckbox${section}`}>
-                {section}
-              </label>
+          <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: '1.5rem', marginTop: '1rem' }}>
+            <b style={{ marginRight: '1rem', color: '#495057', marginTop: '2px', fontSize: '0.95rem' }}>Section:</b>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', maxWidth: '400px' }}>
+              {sections.map((section) => {
+                const isSelected = checkedSections.includes(section);
+                return (
+                  <button
+                    key={section}
+                    type="button"
+                    onClick={() => handleCheckboxChange(section)}
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '4px',
+                      border: isSelected ? '1px solid #e25595' : '1px solid #cbd5e1',
+                      backgroundColor: isSelected ? '#e25595' : 'white',
+                      color: isSelected ? 'white' : '#94a3b8',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease-in-out',
+                      padding: 0
+                    }}
+                  >
+                    {section}
+                  </button>
+                );
+              })}
             </div>
-          ))}
-          <br />
-          <br />
+          </div>
           {/* Loading indicator */}
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <div className='fixed_header'>
-          <table className="table">
+          <table className="table" style={{ minWidth: '600px' }}>
               <thead>
                   <tr>
                       <th scope="col" className="col-1">#</th>
@@ -399,7 +495,11 @@ function StudentList() {
                       <td className='text-center'>{element["Section"]}</td>
                       <td className='text-center'>{element["Group"]}</td>
                       <td className='text-center'>{element["Score"]}/{element["MaxScore"]}</td>
-                      {id !== element["ID"] ? (<td className='text-center'><button type="button" className="btn btn-warning" onClick={() => {handleEditStudent(element)}}><PencilSquare/></button></td>):(null)}
+                      <td className='text-center'>
+                        <button type="button" className="btn btn-warning" onClick={() => {handleEditStudent(element)}}>
+                          <PencilSquare/>
+                        </button>
+                      </td>
                   </tr>
               ))
             ) : (
@@ -412,6 +512,7 @@ function StudentList() {
           }
             </tbody>
           </table>
+          </div>
           </div>
           <br />
         </div>
