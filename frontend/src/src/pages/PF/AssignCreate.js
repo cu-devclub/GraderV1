@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 import PinInput from '../../components/pin';
 import { ArrowLeftCircle, X, Paperclip, Plus } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
@@ -17,6 +18,7 @@ function AssignCreate() {
 
   // User Data
   const [ClassInfo, setClassInfo] = useState({});
+  const [loading, setLoading] = useState(true);
   const [classId,] = useState(sessionStorage.getItem("classId"));
 
   // Normal field

@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { Search, X } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -13,6 +14,7 @@ function TAmanage() {
     const navigate = useNavigate();
 
     const [TAList, setTAList] = useState([]);
+  const [loading, setLoading] = useState(true);
     const [AddMail, setAddMail] = useState("");
     const [Keyword, setKeyword] = useState("");
     const [CSYID, ] = useState(sessionStorage.getItem("CSYID"))

@@ -135,8 +135,8 @@ def main():
             'data': {
                 'LabNum': data[0],
                 'LabName': data[1],
-                "PubDate": data[2].strftime("%Y-%m-%dT%H:%M:%S"),
-                "DueDate": data[3].strftime("%Y-%m-%dT%H:%M:%S"),
+                "PubDate": data[2].strftime("%Y-%m-%dT%H:%M:%S") if data[2] else None,
+                "DueDate": data[3].strftime("%Y-%m-%dT%H:%M:%S") if data[3] else None,
                 "LOD": bool(data[7]),
                 "Lock": isLock(conn, cursor, LID),
                 "ShowOnLock": bool(int(data[8])),

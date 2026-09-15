@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 import { PersonCheck, PersonSlash, BoxArrowLeft, BoxArrowInRight, ArrowLeftCircle, Search } from 'react-bootstrap-icons';
 
@@ -17,6 +18,7 @@ function Checkio() {
     const [classId,] = useState(sessionStorage.getItem("classId"));
     const [LID,] = useState(sessionStorage.getItem("LID"))
     const [ClassInfo, setClassInfo] = useState({});
+  const [loading, setLoading] = useState(true);
 
     const [student, setStudent] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');

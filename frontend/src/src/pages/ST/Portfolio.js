@@ -14,6 +14,7 @@ import {
     Legend,
 } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
+import Shimmer from '../../components/Shimmer';
 
 ChartJS.register(
     CategoryScale,
@@ -60,7 +61,9 @@ function Index() {
   const [Rank, setRank] = useState(null);
   const classId = sessionStorage.getItem("classId")
 
-  const [ClassInfo, setClassInfo] = useState(null)
+  const [ClassInfo, setClassInfo] = useState({})
+  const [loading, setLoading] = useState(true);
+  const displayClassInfo = loading ? { ClassID: '0000000', ClassName: 'Loading Class Name...', ClassYear: '2024/1', Thumbnail: 'null' } : ClassInfo;
 
   const [data, setData] = useState({
     labels: ['0-9', '10-19', '20-29', '30-39', '40-49', '50-59', '60-69', '70-79', '80-89', '90-100'],
@@ -133,9 +136,7 @@ function Index() {
       }
     };
 
-    fetchClass()
-    fetchData();
-    
+    Promise.all([fetchClass(), fetchData()]).finally(() => setLoading(false));
   }, [classId]);
 
 
@@ -169,19 +170,21 @@ function Index() {
       </style>
       <div style={{ flexShrink: 0 }}>
         <Navbar />
-        {ClassInfo && (
-        <div className="responsive-banner" style={{ ...getCourseBannerStyle(ClassInfo['ClassID'] + ClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+        <Shimmer isLoading={loading}>
+        {displayClassInfo && (
+        <div className="responsive-banner" style={{ ...getCourseBannerStyle(displayClassInfo['ClassID'] + displayClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+            <img src={displayClassInfo['Thumbnail'] && displayClassInfo['Thumbnail'] !== 'null' ? `${host}/Thumbnail/` + displayClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
             <div>
-              <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{ClassInfo['ClassName']}</h2>
+              <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{displayClassInfo['ClassName'] || '\u00A0'}</h2>
               <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
-                {ClassInfo['ClassID']} • {ClassInfo['ClassYear']}
+                {displayClassInfo['ClassID'] || '.......'} • {displayClassInfo['ClassYear'] || '.......'}
               </div>
             </div>
           </div>
         </div>
         )}
+        </Shimmer>
       </div>
 
       <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
@@ -199,24 +202,25 @@ function Index() {
         </div>
         <div style={{ flexGrow: 1, overflowX: 'auto', paddingLeft: 0, paddingRight: 0, paddingBottom: '10px', paddingTop: '2rem' }}>
           <div style={{ minWidth: '900px' }}>
-                {Rank ? (
+                <Shimmer isLoading={loading}>
+                {((loading ? { Score: "-", MaxScore: "-", Rank: "-", Amount: "-" } : Rank)) ? (
                 <div className='row' style={{width: "100%"}}>
-                    <div className='col'>
+                    <div className='col shimmer-target-container'>
                         <center>
                             <span style={{fontSize: "2em"}}>Your score</span>
                             <br/><br/>
-                            <div style={{width: "10rem", height: "10rem", border: "2px solid black", borderRadius: "5rem"}}>
+                            <div className="shimmer-target" style={{width: "10rem", height: "10rem", border: "2px solid black", borderRadius: "5rem"}}>
                                 <br/>
-                                <span style={{fontSize: "2em"}}>{Rank["Score"]}</span>
+                                <span style={{fontSize: "2em"}}>{((loading ? { Score: "-", MaxScore: "-", Rank: "-", Amount: "-" } : Rank))["Score"]}</span>
                                 <div style={{width: "6rem", height: "0.1rem", backgroundColor: "black"}}></div>
-                                <span style={{fontSize: "2em"}}>{Rank["MaxScore"]}</span>
+                                <span style={{fontSize: "2em"}}>{((loading ? { Score: "-", MaxScore: "-", Rank: "-", Amount: "-" } : Rank))["MaxScore"]}</span>
                             </div>
                             <br/>
-                            <span>Your current rank in this course: {Rank["Rank"]} of {Rank["Amount"]}</span>
+                            <span className="shimmer-target">Your current rank in this course: {((loading ? { Score: "-", MaxScore: "-", Rank: "-", Amount: "-" } : Rank))["Rank"]} of {((loading ? { Score: "-", MaxScore: "-", Rank: "-", Amount: "-" } : Rank))["Amount"]}</span>
                         </center>
                     </div>
-                    <div className='col' style={{textAlign: "center", color: "rgb(123, 123, 123)"}}>
-                      <div className='row'>
+                    <div className='col shimmer-target-container' style={{textAlign: "center", color: "rgb(123, 123, 123)"}}>
+                      <div className='row shimmer-target'>
                         <div className='col-1'>
                           <div className='text-rotated' style={{marginTop: "12em"}}>
                             Number of students
@@ -229,9 +233,8 @@ function Index() {
                       </div>
                     </div>
                 </div>
-                ) : (
-                    <div>Loading</div>
-                )}
+                ) : null}
+                </Shimmer>
           </div>
         </div>
       </div>

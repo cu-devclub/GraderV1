@@ -17,15 +17,6 @@ function ProfRoutes() {
     useEffect(() => {
         async function checkPermissions() {
             try {
-                withReactContent(Swal).fire({
-                    html: `<div class="pos-center">
-                                <div class="loader"></div>
-                            </div> `,
-                    showCloseButton: false,
-                    showCancelButton: false,
-                    showConfirmButton: false,
-                    background: "rgba(0, 0, 0, 0)"
-                })
                 const CSYID = sessionStorage.getItem("classId");
                 const Email = Cookies.get('Email');
 
@@ -40,7 +31,6 @@ function ProfRoutes() {
                         }
                     });
                     const data = await response.json();
-                    withReactContent(Swal).close()
                     setHasPermission(data.success);
                 } else {
                     setHasPermission(false);
@@ -57,7 +47,7 @@ function ProfRoutes() {
     }, [id]);
 
     if (loading) {
-        return <div></div>;
+        return <Outlet />;
     }
 
     return (perm || hasPermission) ? <Outlet /> : <Navigate to='/' />;

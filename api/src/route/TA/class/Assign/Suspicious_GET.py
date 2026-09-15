@@ -63,7 +63,7 @@ def main():
                 'QID': question_ids.index(int(row[1])) + 1 if int(row[1]) in question_ids else 0,
                 'Type': row[2],
                 'Reason': row[3],
-                'Timestamp': row[4].strftime('%d/%m/%Y %H:%M')
+                'Timestamp': row[4].strftime('%d/%m/%Y %H:%M') if row[4] else None
             })
 
         data = {
