@@ -38,5 +38,5 @@ compose-down: ## Stop the stack (dev or prod)
 	$(DONE)
 
 compose-test: ## Run tests in the stack
-	docker compose -f compose.test.yaml --env-file .env.test up -d
+	docker compose -f compose.yaml -f compose.test.yaml --env-file .env.test up -d
 	$(DONE)
