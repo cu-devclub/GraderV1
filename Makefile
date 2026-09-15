@@ -36,3 +36,7 @@ compose-prod: ## Build and start the stack in prod mode
 compose-down: ## Stop the stack (dev or prod)
 	docker compose -f compose.yaml -f compose.dev.yaml -f compose.prod.yaml down
 	$(DONE)
+
+compose-test: ## Run tests in the stack
+	docker compose -f compose.test.yaml --env-file .env.test up -d
+	$(DONE)
