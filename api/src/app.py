@@ -39,7 +39,7 @@ app = Flask(__name__)
 
 
 if not isDev:
-    CORS(app, supports_credentials=True, resources={r"/api/*": {"origins": config['DOMAIN']}})
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": config['DOMAIN']}})
 else: 
     CORS(app, supports_credentials=True)
 
@@ -60,7 +60,7 @@ jwt = JWTManager(app)
 # app.secret_key = secret_key
 
 # add route to /
-@app.route('/api/')
+@app.route('/')
 def index():
     return Response("I'm a teapot so I sent 418 error.", status=418, mimetype='application/json')
 
@@ -92,12 +92,12 @@ def teardown_request(exception=None):
     if dbdict is not None:
         dbdict.close()
 
-@app.route('/api/Thumbnail/<filename>')
+@app.route('/Thumbnail/<filename>')
 def get_image_thumbnail(filename):
     filepath = os.path.join(UPLOAD_FOLDER, 'Thumbnail', filename)
     return send_from_directory(os.path.dirname(filepath), os.path.basename(filepath))
 
-@app.route("/api/image/<filename>", methods=["GET"])
+@app.route("/image/<filename>", methods=["GET"])
 def get_image(filename):
     image_extensions = {'png', 'jpg', 'jpeg', 'gif'}
     file_extension = filename.split('.')[-1]
