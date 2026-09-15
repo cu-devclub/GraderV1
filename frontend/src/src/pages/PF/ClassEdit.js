@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar'
 import { useNavigate} from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 import { Download, ThreeDotsVertical } from 'react-bootstrap-icons';
 import CustomModal from '../../components/CustomModal';
 
@@ -28,8 +29,10 @@ function ClassEdit() {
     const [CSYID, ] = useState(sessionStorage.getItem("classId"));
 
     const [classData, setClassData] = useState(null)
+    const displayClassData = classData || { classid: '', ClassID: '', SchoolYear: '', ClassName: '', Thumbnail: 'null', Archive: false };
 
     const [classID, setClassID] = useState('');
+  const [loading, setLoading] = useState(true);
     const [schoolYear, setSchoolYear] = useState('');
     const [className, setClassName] = useState('');
     const [Archive, setArchive] = useState(sessionStorage.getItem("Archive") === 'true')
@@ -114,8 +117,7 @@ function ClassEdit() {
             }
         };
 
-        fetchClass();
-        fetchSectionsAndGroups();
+        Promise.all([fetchClass(), fetchSectionsAndGroups()]).finally(() => setLoading(false));
     }, [CSYID]);
 
     const handleEditClick = async () => {
@@ -411,7 +413,7 @@ function ClassEdit() {
     let isCreateButtonDisabled = true
 
     if(classData) {
-        const savebutcondi1 = classID === classData.ClassID && schoolYear === classData.SchoolYear && className === classData.ClassName;
+        const savebutcondi1 = classID === displayClassData.ClassID && schoolYear === displayClassData.SchoolYear && className === displayClassData.ClassName;
         const savebutcondi2 = !classID || !schoolYear || !className;
         isCreateButtonDisabled = savebutcondi1 || savebutcondi2;
     }
@@ -568,7 +570,6 @@ function ClassEdit() {
     <div>
         <Navbar></Navbar> 
         <br></br>
-        {classData ? (
         <div className="card" style={{ marginLeft: 10 +'em', marginRight: 10 + 'em' }}>
             <div className="card-header">
                 <div className="row" style={{marginBottom:"-5px"}}>
@@ -587,7 +588,7 @@ function ClassEdit() {
                                 <button className={`nav-link ${activeTab === 'secgrp' ? 'active' : 'link'}`} onClick={() => setActiveTab('secgrp')}>Sec/Group</button>
                             </li>
                             <li className="nav-item">
-                                <button className="nav-link link" onClick={() => {sessionStorage.setItem("CSYID", classData.classid);navigate("/TAmanage")}} >TA</button>
+                                <button className="nav-link link" onClick={() => {sessionStorage.setItem("CSYID", displayClassData.classid);navigate("/TAmanage")}} >TA</button>
                             </li>
                         </ul>
                     </div>
@@ -604,15 +605,15 @@ function ClassEdit() {
                         <div className="row g-3">
                             <div className="col-md-3">
                                 <label htmlFor="inputID" className="form-label">Class ID*</label>
-                                <input type="text" className="form-control" id="inputID" placeholder="ex. 2301233 (7 digits number)" value={classID} onChange={handleClassIDChange} />
+                                <Shimmer isLoading={loading}><input type="text" className="form-control" id="inputID" placeholder="ex. 2301233 (7 digits number)" value={classID} onChange={handleClassIDChange} /></Shimmer>
                             </div>
                             <div className="col-md-3">
                                 <label htmlFor="inputYear" className="form-label">School Year/Semester*</label>
-                                <input type="text" className="form-control" id="inputYear" placeholder="ex. 2020/1" value={schoolYear} onChange={handleSchoolYearChange}/>
+                                <Shimmer isLoading={loading}><input type="text" className="form-control" id="inputYear" placeholder="ex. 2020/1" value={schoolYear} onChange={handleSchoolYearChange}/></Shimmer>
                             </div>
                             <div className="col-6">
                                 <label htmlFor="inputName" className="form-label">Class Name*</label>
-                                <input type="text" className="form-control" id="inputClass" placeholder="Name" value={className} onChange={handleClassNameChange}/>
+                                <Shimmer isLoading={loading}><input type="text" className="form-control" id="inputClass" placeholder="Name" value={className} onChange={handleClassNameChange}/></Shimmer>
                             </div>
                         </div>
                         <div className="row" style={{marginTop: "10px",marginBottom: "20px"}}>
@@ -634,7 +635,7 @@ function ClassEdit() {
                                     <h6 className="text-muted mb-3">Card Preview</h6>
                                     <div className="card" style={{width: '300px', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', opacity: Archive ? 0.5 : 1}}>
                                         <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
-                                            <img className="card-img-top w-100 d-block" src={pictureFile ? URL.createObjectURL(pictureFile) : ((classData.Thumbnail && classData.Thumbnail !== "null") ? `${host}/Thumbnail/` + classData.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png")} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
+                                            <Shimmer isLoading={loading}><img className="card-img-top w-100 d-block" src={pictureFile ? URL.createObjectURL(pictureFile) : ((displayClassData.Thumbnail && displayClassData.Thumbnail !== "null") ? `${host}/Thumbnail/` + displayClassData.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png")} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/></Shimmer>
                                         </div>
                                         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', padding: '20px' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -653,7 +654,7 @@ function ClassEdit() {
                                         </div>
                                     </div>
                                     <br/>
-                                    {(classData.Thumbnail && classData.Thumbnail !== "null") ? (<button type="button" className="btn btn-outline-dark" style={{width: "auto", textAlign: "Left", marginTop: "0.4em", borderRadius: "20px", padding: "8px 20px", fontWeight: "bold"}} onClick={() => {downfile()}}><Download /> Download Current Thumbnail</button>) : (<i/>)}
+                                    {(displayClassData.Thumbnail && displayClassData.Thumbnail !== "null") ? (<button type="button" className="btn btn-outline-dark" style={{width: "auto", textAlign: "Left", marginTop: "0.4em", borderRadius: "20px", padding: "8px 20px", fontWeight: "bold"}} onClick={() => {downfile()}}><Download /> Download Current Thumbnail</button>) : (<i/>)}
                                 </div>
                                 <div className="col">
                                     <h6 className="text-muted mb-3">Upload New Picture</h6>
@@ -855,9 +856,6 @@ function ClassEdit() {
                 )}
             </div>
         </div>
-        ) : (
-            <div>Loading...</div>
-        )}
         <CustomModal 
             show={modalConfig.show} 
             title={modalConfig.title}

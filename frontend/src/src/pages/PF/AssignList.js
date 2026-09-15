@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import { Download, QrCodeScan, Search, Funnel, Plus, ThreeDotsVertical, CaretDownFill } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -149,12 +150,11 @@ function AssignList() {
   
   const navigate = useNavigate();
   const [ClassInfo, setClassInfo] = useState({});
-  
   const [classId,] = useState(sessionStorage.getItem("classId"));
-
   const [assignmentsData, setAssignmentsData] = useState([]);
-  
   const [isButtonClicked, setIsButtonClicked] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const displayClassInfo = loading ? { ClassID: '0000000', ClassName: 'Loading Class Name...', ClassYear: '2024/1', Thumbnail: 'null' } : ClassInfo;
 
   useEffect(() => {
     document.body.style.backgroundColor = "#FFF"
@@ -198,8 +198,9 @@ function AssignList() {
       }
     };
 
-    fetchClass();
-    fetchData()
+    Promise.all([fetchClass(), fetchData()]).finally(() => {
+      setLoading(false);
+    });
   }, [classId, navigate]);
 
   const toggleLock = async (event, LID) => {
@@ -261,22 +262,23 @@ function AssignList() {
       </style>
       <div style={{ flexShrink: 0 }}>
         <Navbar />
-        {ClassInfo && (
-        <div className="responsive-banner" style={{ ...getCourseBannerStyle(ClassInfo['ClassID'] + ClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-            <div>
-              <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{ClassInfo['ClassName']}</h2>
-              <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
-                {ClassInfo['ClassID']} • {ClassInfo['ClassYear']}
+        <Shimmer isLoading={loading} height="300px">
+          {displayClassInfo && (
+          <div className="responsive-banner" style={{ ...getCourseBannerStyle(displayClassInfo['ClassID'] + displayClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img src={displayClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + displayClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+              <div>
+                <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{displayClassInfo['ClassName'] || '\u00A0'}</h2>
+                <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
+                  {displayClassInfo['ClassID'] || '.......'} • {displayClassInfo['ClassYear'] || '.......'}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        )}
+          )}
+        </Shimmer>
       </div>
 
-      {/* <div className="card" style={{ marginLeft: 10 + 'em', marginRight: 10 + 'em' }}> */}
       <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
         <div style={{ flexShrink: 0, backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '2px solid #d3d3d3' }}>
@@ -305,23 +307,29 @@ function AssignList() {
                 <div style={{ width: '220px', textAlign: 'center' }}>Publish</div>
                 <div style={{ width: '220px', textAlign: 'center' }}>Due</div>
               </div>
-            <div>
-              {assignmentsData && ((assignmentsData.length !== 0) && (
-              assignmentsData.map(assign => {
+            <Shimmer isLoading={loading}>
+              {(loading ? [
+                { LID: "dummy1", Lab: " ", Name: " ", Publish: " ", Due: " ", Lock: false },
+                { LID: "dummy2", Lab: " ", Name: " ", Publish: " ", Due: " ", Lock: false },
+                { LID: "dummy3", Lab: " ", Name: " ", Publish: " ", Due: " ", Lock: false }
+              ] : assignmentsData).map((assign, index) => {
+                // If it's a dummy item, don't execute handleRedirect
+                const onClickAction = loading ? undefined : () => handleRedirect(assign["LID"]);
+                
                 return (
-                <div key={assign["LID"]} className='card' style={{ marginBottom: '1rem', borderRadius: '10px', border: '1px solid #e5e7eb', overflow: 'visible' }} onClick={() => handleRedirect(assign["LID"])}>
-                  <div className='row align-items-center' style={{ margin: 0, width: '100%', height: '5rem', cursor: 'pointer', flexWrap: 'nowrap' }}>
-                    <div className='col-1 d-flex justify-content-center align-items-center' style={{ backgroundColor: '#f3f4f6', height: '100%', fontWeight: 'bold', fontSize: '1.2rem', color: '#374151', borderTopLeftRadius: '9px', borderBottomLeftRadius: '9px' }}>
-                      {assign["Lab"]}
+                <div key={assign["LID"] || index} className='card shimmer-target-container' style={{ marginBottom: '1rem', borderRadius: '10px', border: '1px solid #e5e7eb', overflow: 'visible' }} onClick={onClickAction}>
+                  <div className='row align-items-center' style={{ margin: 0, width: '100%', height: '5rem', cursor: loading ? 'default' : 'pointer', flexWrap: 'nowrap' }}>
+                    <div className='col-1 d-flex justify-content-center align-items-center shimmer-target' style={{ backgroundColor: '#f3f4f6', height: '100%', fontWeight: 'bold', fontSize: '1.2rem', color: '#374151', borderTopLeftRadius: '9px', borderBottomLeftRadius: '9px', minWidth: '40px' }}>
+                      {assign["Lab"] || '\u00A0'}
                     </div>
-                    <div className='col' style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#374151', textAlign: 'left', paddingLeft: '2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {assign["Name"]}
+                    <div className='col shimmer-target' style={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#374151', textAlign: 'left', paddingLeft: '2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block', minWidth: '100px' }}>
+                      {assign["Name"] || '\u00A0'}
                     </div>
                     <div className='d-flex justify-content-center' style={{ width: '130px' }}>
                       <StatusDropdown assign={assign} toggleLock={toggleLock} setIsButtonClicked={setIsButtonClicked} />
                     </div>
                     <div className='d-flex align-items-center justify-content-center' style={{ width: '220px' }}>
-                      <span style={{ 
+                      <span className="shimmer-target" style={{ 
                         border: hasArrived(assign["Publish"]) ? '1px solid #e5e7eb' : '1px solid #d1d5db', 
                         borderRadius: '6px', 
                         padding: '0.4rem 0.6rem', 
@@ -329,18 +337,20 @@ function AssignList() {
                         color: hasArrived(assign["Publish"]) ? '#9ca3af' : '#4b5563', 
                         fontWeight: 'bold', 
                         backgroundColor: hasArrived(assign["Publish"]) ? '#f3f4f6' : 'white', 
-                        whiteSpace: 'nowrap' 
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block',
+                        minWidth: '80px'
                       }}>
-                        {assign["Publish"]}
+                        {assign["Publish"] || '\u00A0'}
                       </span>
                       {getTimeDiff(assign["Publish"]) && (
-                        <span style={{ color: '#9ca3af', fontSize: '0.85rem', marginLeft: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        <span className="shimmer-target" style={{ color: '#9ca3af', fontSize: '0.85rem', marginLeft: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                           {getTimeDiff(assign["Publish"])}
                         </span>
                       )}
                     </div>
                     <div className='d-flex align-items-center justify-content-center' style={{ width: '220px' }}>
-                      <span style={{ 
+                      <span className="shimmer-target" style={{ 
                         border: hasArrived(assign["Due"]) ? '1px solid #e5e7eb' : '1px solid #d1d5db', 
                         borderRadius: '6px', 
                         padding: '0.4rem 0.6rem', 
@@ -348,12 +358,14 @@ function AssignList() {
                         color: hasArrived(assign["Due"]) ? '#9ca3af' : '#4b5563', 
                         fontWeight: 'bold', 
                         backgroundColor: hasArrived(assign["Due"]) ? '#f3f4f6' : 'white', 
-                        whiteSpace: 'nowrap' 
+                        whiteSpace: 'nowrap',
+                        display: 'inline-block',
+                        minWidth: '80px'
                       }}>
-                        {assign["Due"]}
+                        {assign["Due"] || '\u00A0'}
                       </span>
                       {getTimeDiff(assign["Due"]) && (
-                        <span style={{ color: '#9ca3af', fontSize: '0.85rem', marginLeft: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
+                        <span className="shimmer-target" style={{ color: '#9ca3af', fontSize: '0.85rem', marginLeft: '6px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
                           {getTimeDiff(assign["Due"])}
                         </span>
                       )}
@@ -361,14 +373,12 @@ function AssignList() {
                   </div>
                 </div>
                 )
-              })
-            ))
-            }
+              })}
+            </Shimmer>
             </div>
           </div>
         </div>
       </div>
-    </div>
   )
 }
 

@@ -4,6 +4,7 @@ import withReactContent from 'sweetalert2-react-content';
 import { useNavigate, useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
 

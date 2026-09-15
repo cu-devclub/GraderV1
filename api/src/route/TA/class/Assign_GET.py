@@ -50,8 +50,8 @@ def main():
                 "LID": i[0],
                 "Lab": i[1],
                 "Name": i[2],
-                "Publish": datetime.strptime(str(i[3]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
-                "Due": datetime.strptime(str(i[4]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
+                "Publish": datetime.strptime(str(i[3]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M") if i[3] else None,
+                "Due": datetime.strptime(str(i[4]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M") if i[4] else None,
                 "Lock": bool(i[5])
             })
 
