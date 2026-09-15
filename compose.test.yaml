@@ -1,5 +1,5 @@
 services:
-  backend:
+  backend-test:
     image: ghcr.io/cu-devclub/graderv1:api-testing
     container_name: backend-test
     restart: unless-stopped
@@ -26,12 +26,12 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
-  frontend:
+  frontend-test:
     image: ghcr.io/cu-devclub/graderv1:frontend-testing
     container_name: frontend-test
     restart: unless-stopped
     depends_on:
-      - backend
+      - backend-test
     networks:
       - grader-network
     labels:
