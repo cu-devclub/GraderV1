@@ -4,7 +4,7 @@ services:
     container_name: backend-test
     restart: unless-stopped
     volumes:
-      - ~/grader/files:/files
+      - ~/grader/files-test:/files
     depends_on:
       - mysql
     environment:
