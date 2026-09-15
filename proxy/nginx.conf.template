@@ -67,7 +67,8 @@ server {
     }
 
     location /api {
-        set $test_backend_upstream ${TEST_BACKEND_URL}/;
+        rewrite ^/api/?(.*)$ /$1 break;
+        set $test_backend_upstream ${TEST_BACKEND_URL};
         proxy_pass http://$test_backend_upstream;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
