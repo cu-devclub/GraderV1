@@ -6,12 +6,24 @@ import { useNavigate} from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import { Download, ThreeDotsVertical } from 'react-bootstrap-icons';
+import CustomModal from '../../components/CustomModal';
 
 const host = `${process.env.REACT_APP_HOST}`
 
 
 function ClassEdit() {
     const navigate = useNavigate();
+
+    const [modalConfig, setModalConfig] = useState({
+        show: false,
+        title: '',
+        message: '',
+        type: 'alert', // 'alert' or 'prompt'
+        inputValue: '',
+        onConfirm: () => {},
+        confirmText: 'Confirm',
+        confirmColor: 'primary'
+    });
 
     const [CSYID, ] = useState(sessionStorage.getItem("classId"));
 
@@ -22,6 +34,11 @@ function ClassEdit() {
     const [className, setClassName] = useState('');
     const [Archive, setArchive] = useState(sessionStorage.getItem("Archive") === 'true')
     const [activeTab, setActiveTab] = useState('class');
+
+    const [sections, setSections] = useState([]);
+    const [groups, setGroups] = useState([]);
+    const [newSection, setNewSection] = useState('');
+    const [newGroup, setNewGroup] = useState('');
 
     const [pictureFile, setPictureFile] = useState(null);
     const [studentFile, setStudentFile] = useState(null);
@@ -69,7 +86,36 @@ function ClassEdit() {
             }
         };  
       
-        fetchClass()
+        const fetchSectionsAndGroups = async () => {
+            try {
+                const secRes = await fetch(`${host}/TA/class/classes/section?CSYID=${CSYID}&include_count=true`, {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                        "X-CSRF-TOKEN": Cookies.get("csrf_token")
+                    }
+                });
+                const secData = await secRes.json();
+                setSections(Array.isArray(secData) ? secData : []);
+
+                const grpRes = await fetch(`${host}/TA/class/classes/group?CSYID=${CSYID}&include_count=true`, {
+                    method: "GET",
+                    credentials: "include",
+                    headers: {
+                        "Content-type": "application/json; charset=UTF-8",
+                        "X-CSRF-TOKEN": Cookies.get("csrf_token")
+                    }
+                });
+                const grpData = await grpRes.json();
+                setGroups(Array.isArray(grpData) ? grpData : []);
+            } catch (error) {
+                console.error('Error fetching sec/grp:', error);
+            }
+        };
+
+        fetchClass();
+        fetchSectionsAndGroups();
     }, [CSYID]);
 
     const handleEditClick = async () => {
@@ -429,6 +475,95 @@ function ClassEdit() {
         .catch(error => console.error('Error:', error));
     }
 
+    const refreshSecGrp = () => {
+        fetch(`${host}/TA/class/classes/section?CSYID=${CSYID}&include_count=true`, { credentials: "include", headers: { "X-CSRF-TOKEN": Cookies.get("csrf_token") } })
+            .then(res => res.json())
+            .then(data => setSections(Array.isArray(data) ? data : []))
+            .catch(err => console.error(err));
+        fetch(`${host}/TA/class/classes/group?CSYID=${CSYID}&include_count=true`, { credentials: "include", headers: { "X-CSRF-TOKEN": Cookies.get("csrf_token") } })
+            .then(res => res.json())
+            .then(data => setGroups(Array.isArray(data) ? data : []))
+            .catch(err => console.error(err));
+    };
+
+    const handleCreateSection = async () => {
+        if (!newSection) return;
+        try {
+            const res = await fetch(`${host}/TA/class/classes/section`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": Cookies.get("csrf_token") },
+                body: JSON.stringify({ CSYID: CSYID, Section: newSection })
+            });
+            const data = await res.json();
+            if (data.success) { setNewSection(''); refreshSecGrp(); } else { Swal.fire('Error', data.msg, 'error'); }
+        } catch (error) { console.error(error); }
+    };
+
+    const closeCustomModal = () => setModalConfig(prev => ({ ...prev, show: false }));
+
+    const handleDeleteSection = (sectionName) => {
+        setModalConfig({
+            show: true,
+            title: `Delete Section`,
+            message: `Are you sure you want to delete section "${sectionName || '(Empty)'}"? It must be empty.`,
+            type: 'alert',
+            confirmText: 'Yes, delete it!',
+            confirmColor: 'danger',
+            onConfirm: async () => {
+                closeCustomModal();
+                try {
+                    const res = await fetch(`${host}/TA/class/classes/section`, {
+                        method: "DELETE",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": Cookies.get("csrf_token") },
+                        body: JSON.stringify({ CSYID: CSYID, Section: sectionName })
+                    });
+                    const data = await res.json();
+                    if (data.success) { refreshSecGrp(); } else { Swal.fire('Error', data.msg, 'error'); }
+                } catch (error) { console.error(error); }
+            }
+        });
+    };
+
+    const handleCreateGroup = async () => {
+        if (!newGroup) return;
+        try {
+            const res = await fetch(`${host}/TA/class/classes/group`, {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": Cookies.get("csrf_token") },
+                body: JSON.stringify({ CSYID: CSYID, Group: newGroup })
+            });
+            const data = await res.json();
+            if (data.success) { setNewGroup(''); refreshSecGrp(); } else { Swal.fire('Error', data.msg, 'error'); }
+        } catch (error) { console.error(error); }
+    };
+
+    const handleDeleteGroup = (groupName) => {
+        setModalConfig({
+            show: true,
+            title: `Delete Group`,
+            message: `Are you sure you want to delete group "${groupName || '(Empty)'}"? It must be empty.`,
+            type: 'alert',
+            confirmText: 'Yes, delete it!',
+            confirmColor: 'danger',
+            onConfirm: async () => {
+                closeCustomModal();
+                try {
+                    const res = await fetch(`${host}/TA/class/classes/group`, {
+                        method: "DELETE",
+                        credentials: "include",
+                        headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": Cookies.get("csrf_token") },
+                        body: JSON.stringify({ CSYID: CSYID, Group: groupName })
+                    });
+                    const data = await res.json();
+                    if (data.success) { refreshSecGrp(); } else { Swal.fire('Error', data.msg, 'error'); }
+                } catch (error) { console.error(error); }
+            }
+        });
+    };
+
   return (
     <div>
         <Navbar></Navbar> 
@@ -449,12 +584,15 @@ function ClassEdit() {
                                 <button className={`nav-link ${activeTab === 'student' ? 'active' : 'link'}`} onClick={() => setActiveTab('student')}>Student</button>
                             </li>
                             <li className="nav-item">
+                                <button className={`nav-link ${activeTab === 'secgrp' ? 'active' : 'link'}`} onClick={() => setActiveTab('secgrp')}>Sec/Group</button>
+                            </li>
+                            <li className="nav-item">
                                 <button className="nav-link link" onClick={() => {sessionStorage.setItem("CSYID", classData.classid);navigate("/TAmanage")}} >TA</button>
                             </li>
                         </ul>
                     </div>
                     <div className="col-md-2">
-                        <button className="btn btn-primary float-end" type="button" style={{marginLeft:"20px"}} onClick={() => navigate("/")}>Back</button>
+                        <button className="btn btn-dark float-end" type="button" style={{ marginLeft:"20px", borderRadius: "20px", padding: "8px 20px", fontWeight: "bold", border: "none" }} onClick={() => navigate("/")}>Back</button>
                     </div>
                 </div>
             </div>
@@ -479,8 +617,8 @@ function ClassEdit() {
                         </div>
                         <div className="row" style={{marginTop: "10px",marginBottom: "20px"}}>
                             <div className="col">
-                                <button type="button" className="btn btn-primary float-end" disabled={isCreateButtonDisabled} onClick={handleEditClick}>Save</button>
-                                <button type="button" className="btn btn-outline-danger float-end" style={{marginRight: "10px"}} onClick={handleArchive}>{Archive ? "Unarchive" : "Archive"}</button>
+                                <button type="button" className="btn float-end" disabled={isCreateButtonDisabled} onClick={handleEditClick} style={{ backgroundColor: "#e25595", color: "white", border: "none", borderRadius: "20px", padding: "8px 20px", fontWeight: "bold" }}>Save</button>
+                                <button type="button" className="btn btn-outline-danger float-end" style={{marginRight: "10px", borderRadius: "20px", padding: "8px 20px", fontWeight: "bold"}} onClick={handleArchive}>{Archive ? "Unarchive" : "Archive"}</button>
                             </div>
                         </div>
                     </>
@@ -515,7 +653,7 @@ function ClassEdit() {
                                         </div>
                                     </div>
                                     <br/>
-                                    {(classData.Thumbnail && classData.Thumbnail !== "null") ? (<button type="button" className="btn btn-outline-dark" style={{width: "auto", textAlign: "Left", marginTop: "0.4em"}} onClick={() => {downfile()}}><Download /> Download Current Thumbnail</button>) : (<i/>)}
+                                    {(classData.Thumbnail && classData.Thumbnail !== "null") ? (<button type="button" className="btn btn-outline-dark" style={{width: "auto", textAlign: "Left", marginTop: "0.4em", borderRadius: "20px", padding: "8px 20px", fontWeight: "bold"}} onClick={() => {downfile()}}><Download /> Download Current Thumbnail</button>) : (<i/>)}
                                 </div>
                                 <div className="col">
                                     <h6 className="text-muted mb-3">Upload New Picture</h6>
@@ -557,7 +695,7 @@ function ClassEdit() {
                                             {timestamps[0] && <p className="card-text text-muted">Last Submitted: <span>{timestamps[0]}</span></p>}
                                         </div>
                                         <div className="col-md-3">
-                                            <button className="btn btn-primary float-end w-100 fw-bold" style={{ borderRadius: '8px' }} type="button" onClick={() => handleUpload(0)}>Upload</button>
+                                            <button className="btn float-end w-100 fw-bold" style={{ backgroundColor: "#e25595", color: "white", border: "none", borderRadius: "20px", padding: "8px 20px" }} type="button" onClick={() => handleUpload(0)}>Upload</button>
                                         </div>
                                     </div>
                                 </div>
@@ -611,12 +749,107 @@ function ClassEdit() {
                                             {timestamps[1] && <p className="card-text text-muted">Last Submitted: <span>{timestamps[1]}</span></p>}
                                         </div>
                                         <div className="col-md-4">
-                                            <button className="btn btn-primary float-end fw-bold" style={{ borderRadius: '8px' }} type="button" onClick={() => handleUpload(1)}>Upload</button>
-                                            <button className="btn btn-outline-secondary float-end fw-bold" type="button" style={{marginRight: "10px", borderRadius: '8px'}} onClick={handleGenTemplate}>Template</button>
+                                            <button className="btn float-end fw-bold" style={{ backgroundColor: "#e25595", color: "white", border: "none", borderRadius: "20px", padding: "8px 20px" }} type="button" onClick={() => handleUpload(1)}>Upload</button>
+                                            <button className="btn btn-outline-secondary float-end fw-bold" type="button" style={{marginRight: "10px", borderRadius: "20px", padding: "8px 20px"}} onClick={handleGenTemplate}>Template</button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'secgrp' && (
+                    <div className="row mt-4">
+                        <div className="col-md-6 border-end pe-4">
+                            <h3>Sections</h3>
+                            <div className="d-flex mb-3 mt-3">
+                                <input type="text" className="form-control me-2" placeholder="New Section Name" value={newSection} onChange={(e) => setNewSection(e.target.value)} style={{ borderRadius: "20px" }} />
+                                <button className="btn fw-bold" style={{ backgroundColor: "#e25595", color: "white", border: "none", borderRadius: "20px", padding: "8px 20px" }} onClick={handleCreateSection}>Add</button>
+                            </div>
+                            <ul className="list-group">
+                                {sections.map((secObj, idx) => {
+                                    const sec = secObj.name;
+                                    const count = secObj.count;
+                                    return (
+                                    <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>
+                                            {sec || "(Empty)"}
+                                            <span className="badge bg-secondary ms-2 rounded-pill">{count} <i className="bi bi-person-fill"></i></span>
+                                        </span>
+                                        <div>
+                                            <button className="btn btn-sm btn-outline-warning me-2 fw-bold" style={{ borderRadius: "20px", padding: "4px 12px" }} onClick={() => {
+                                                setModalConfig({
+                                                    show: true,
+                                                    title: 'Edit Section',
+                                                    message: 'Enter new section name:',
+                                                    type: 'prompt',
+                                                    inputValue: sec,
+                                                    confirmText: 'Save',
+                                                    confirmColor: 'primary',
+                                                    onConfirm: async (newName) => {
+                                                        closeCustomModal();
+                                                        if (newName !== undefined && newName !== sec) {
+                                                            try {
+                                                                const res = await fetch(`${host}/TA/class/classes/section`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": Cookies.get("csrf_token") }, body: JSON.stringify({ CSYID, OldSection: sec, NewSection: newName }) });
+                                                                const data = await res.json();
+                                                                if(data.success) refreshSecGrp(); else Swal.fire('Error', data.msg, 'error');
+                                                            } catch (err) { console.error(err); }
+                                                        }
+                                                    }
+                                                });
+                                            }}>Edit</button>
+                                            <button className="btn btn-sm btn-outline-danger fw-bold" style={{ borderRadius: "20px", padding: "4px 12px" }} onClick={() => handleDeleteSection(sec)}>Delete</button>
+                                        </div>
+                                    </li>
+                                )})}
+                            </ul>
+                            {sections.length === 0 && <p className="text-muted mt-2">No sections found.</p>}
+                        </div>
+                        <div className="col-md-6 ps-4">
+                            <h3>Groups</h3>
+                            <div className="d-flex mb-3 mt-3">
+                                <input type="text" className="form-control me-2" placeholder="New Group Name" value={newGroup} onChange={(e) => setNewGroup(e.target.value)} style={{ borderRadius: "20px" }} />
+                                <button className="btn fw-bold" style={{ backgroundColor: "#e25595", color: "white", border: "none", borderRadius: "20px", padding: "8px 20px" }} onClick={handleCreateGroup}>Add</button>
+                            </div>
+                            <ul className="list-group">
+                                {groups.map((grpObj, idx) => {
+                                    const grp = grpObj.name;
+                                    const count = grpObj.count;
+                                    return (
+                                    <li key={idx} className="list-group-item d-flex justify-content-between align-items-center">
+                                        <span>
+                                            {grp || "(Empty)"}
+                                            <span className="badge bg-secondary ms-2 rounded-pill">{count} <i className="bi bi-person-fill"></i></span>
+                                        </span>
+                                        <div>
+                                            <button className="btn btn-sm btn-outline-warning me-2 fw-bold" style={{ borderRadius: "20px", padding: "4px 12px" }} onClick={() => {
+                                                setModalConfig({
+                                                    show: true,
+                                                    title: 'Edit Group',
+                                                    message: 'Enter new group name:',
+                                                    type: 'prompt',
+                                                    inputValue: grp,
+                                                    confirmText: 'Save',
+                                                    confirmColor: 'primary',
+                                                    onConfirm: async (newName) => {
+                                                        closeCustomModal();
+                                                        if (newName !== undefined && newName !== grp) {
+                                                            try {
+                                                                const res = await fetch(`${host}/TA/class/classes/group`, { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": Cookies.get("csrf_token") }, body: JSON.stringify({ CSYID, OldGroup: grp, NewGroup: newName }) });
+                                                                const data = await res.json();
+                                                                if(data.success) refreshSecGrp(); else Swal.fire('Error', data.msg, 'error');
+                                                            } catch (err) { console.error(err); }
+                                                        }
+                                                    }
+                                                });
+                                            }}>Edit</button>
+                                            <button className="btn btn-sm btn-outline-danger fw-bold" style={{ borderRadius: "20px", padding: "4px 12px" }} onClick={() => handleDeleteGroup(grp)}>Delete</button>
+                                        </div>
+                                    </li>
+                                )})}
+                            </ul>
+                            {groups.length === 0 && <p className="text-muted mt-2">No groups found.</p>}
                         </div>
                     </div>
                 )}
@@ -625,6 +858,18 @@ function ClassEdit() {
         ) : (
             <div>Loading...</div>
         )}
+        <CustomModal 
+            show={modalConfig.show} 
+            title={modalConfig.title}
+            message={modalConfig.message}
+            type={modalConfig.type}
+            inputValue={modalConfig.inputValue}
+            onInputChange={(val) => setModalConfig(prev => ({ ...prev, inputValue: val }))}
+            onClose={closeCustomModal}
+            onConfirm={modalConfig.onConfirm}
+            confirmText={modalConfig.confirmText}
+            confirmColor={modalConfig.confirmColor}
+        />
     </div>
   )
 }

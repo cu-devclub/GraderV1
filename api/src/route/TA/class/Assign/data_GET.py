@@ -69,6 +69,7 @@ def main():
 
         isGroup = data[4] is None
         newD5 = data[5] if isGroup else data[4]
+        newD5 = newD5 or "[]"
         CSYID = data[6]
 
         if isGroup:
@@ -142,7 +143,7 @@ def main():
                 "isExam": bool(int(data[9])),
                 "ExamPin": data[10],
                 "IsGroup": isGroup,
-                "Selected": [PreSelectList[int(i)] for i in [i for i in newD5.strip("[] ").split(",")]],
+                "Selected": [PreSelectList[int(i)] for i in newD5.strip("[] ").split(",") if i.strip().isdigit() and int(i) in PreSelectList],
                 "SelectList": list(PreSelectList.values()),
                 "Question": [{"id": i+1, "QID": questions[i][0], "score": int(questions[i][1])} for i in range(len(questions))],
                 "addfile": [[file[0], os.path.basename(file[1]), file[2] == 0] for file in addfiles]

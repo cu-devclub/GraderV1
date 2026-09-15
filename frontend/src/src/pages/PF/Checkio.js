@@ -6,7 +6,7 @@ import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-import { PersonCheck, PersonSlash, BoxArrowLeft, BoxArrowInRight, ArrowLeftCircle } from 'react-bootstrap-icons';
+import { PersonCheck, PersonSlash, BoxArrowLeft, BoxArrowInRight, ArrowLeftCircle, Search } from 'react-bootstrap-icons';
 
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -259,6 +259,13 @@ function Checkio() {
           .tab-scroll-container::-webkit-scrollbar {
               display: none;
           }
+          .sticky-table-header th {
+              position: sticky;
+              top: 154px; /* adjusted because tabs and buttons are ~100px */
+              background-color: white;
+              z-index: 10;
+              box-shadow: inset 0 -2px 0 #dee2e6;
+          }
           `}
       </style>
       <Navbar />
@@ -268,8 +275,8 @@ function Checkio() {
           <ArrowLeftCircle size={18} /> <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Back to assignment</span>
         </div>
       </div>
-      <div className="card responsive-container" style={{ marginLeft: '10em', marginRight: '10em', maxHeight: "70vh", border: 'none', boxShadow: 'none'}}>
-        <div style={{ backgroundColor: 'white' }}>
+      <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
+        <div style={{ flexShrink: 0, backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', borderBottom: '1px solid #cbd5e1' }}>
             <div className="tab-scroll-container" style={{ display: 'flex', width: '100%' }}>
               <div style={{ padding: '10px 40px', fontSize: '1.05rem', color: '#64748b', cursor: 'pointer', marginBottom: '-1px' }} onClick={() => {navigate("/AssignEdit", { state: { tab: 'Detail' } })}}>
@@ -292,20 +299,15 @@ function Checkio() {
               </div>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '1rem', marginBottom: '0.5rem', paddingRight: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '1rem', marginBottom: '1rem', paddingRight: '1.5rem' }}>
             <button type="button" onClick={checkallout} style={{ padding: '6px 20px', backgroundColor: 'white', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', cursor: 'pointer', fontSize: '0.9rem' }}>Check out all</button>
             <button type="button" onClick={checkallin} style={{ padding: '6px 20px', backgroundColor: '#e25595', border: 'none', color: 'white', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', cursor: 'pointer', fontSize: '0.9rem' }}>Check in all</button>
           </div>
         </div>
-        <div className="card-body" style={{ overflowY: 'scroll' }}>
-          <form className="d-flex">
-            <input className="form-control me-2" type="search" placeholder="Search ID or Name" aria-label="Search" onChange={handleSearch} />
-          </form>
-          <br />
-          {/* Loading indicator */}
-          <div className='fixed_header'>
+        <div style={{ flexGrow: 1, paddingBottom: '10px' }}>
+          <div style={{ WebkitOverflowScrolling: 'touch' }}>
             <table className="table">
-              <thead>
+              <thead className="sticky-table-header">
                 <tr>
                   <th scope="col" className="col-1">#</th>
                   <th scope="col" className="col-2">Student ID</th>
@@ -358,6 +360,18 @@ function Checkio() {
             </table>
           </div>
         </div>
+      </div>
+      
+      {/* Floating Search Island */}
+      <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', zIndex: 900, background: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)', padding: '12px 24px', borderRadius: '30px', boxShadow: '0 8px 32px rgba(0,0,0,0.15)', border: '1px solid rgba(255, 255, 255, 0.5)', display: 'flex', alignItems: 'center', width: '90%', maxWidth: '450px' }}>
+        <Search size={20} style={{ color: '#64748b', marginRight: '12px' }} />
+        <input 
+          type="search" 
+          placeholder="Search ID or Name" 
+          value={searchQuery}
+          onChange={handleSearch} 
+          style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '1.05rem', color: '#334155' }} 
+        />
       </div>
     </div>
   );

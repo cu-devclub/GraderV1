@@ -14,11 +14,23 @@ def main():
         return jsonify([])
 
 
-    section_query = """SELECT GRP.Group FROM `group` GRP WHERE GRP.CSYID = %s"""
-    cursor.execute(section_query, (CSYID,))
-    data = cursor.fetchall()
-    
-    # Transform the fetched data into a list of section values
-    transformdata = sorted([row[0] for row in data])
-    
-    return jsonify(transformdata)
+    include_count = request.args.get("include_count") == "true"
+
+    if include_count:
+        section_query = """
+            SELECT GRP.Group, COUNT(ST.ID)
+            FROM `group` GRP
+            LEFT JOIN student ST ON GRP.GID = ST.GID
+            WHERE GRP.CSYID = %s
+            GROUP BY GRP.GID
+        """
+        cursor.execute(section_query, (CSYID,))
+        data = cursor.fetchall()
+        transformdata = sorted([{"name": row[0], "count": row[1]} for row in data], key=lambda x: x["name"])
+        return jsonify(transformdata)
+    else:
+        section_query = """SELECT GRP.Group FROM `group` GRP WHERE GRP.CSYID = %s"""
+        cursor.execute(section_query, (CSYID,))
+        data = cursor.fetchall()
+        transformdata = sorted([row[0] for row in data])
+        return jsonify(transformdata)
