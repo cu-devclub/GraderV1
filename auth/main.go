@@ -93,7 +93,7 @@ func handleGoogleLogin(c *gin.Context) {
 	session.Set("state", state)
 	session.Save()
 
-	url := googleOauthConfig.AuthCodeURL(state)
+	url := googleOauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("prompt", "select_account"))
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
