@@ -1,0 +1,84 @@
+/* 
+  Universal Shimmer Styles 
+  Targets common content elements inside the wrapper to give them a shimmer effect
+*/
+
+.universal-shimmer-wrapper {
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Target elements that typically contain content */
+.universal-shimmer-wrapper h1,
+.universal-shimmer-wrapper h2,
+.universal-shimmer-wrapper h3,
+.universal-shimmer-wrapper h4,
+.universal-shimmer-wrapper h5,
+.universal-shimmer-wrapper h6,
+.universal-shimmer-wrapper p,
+.universal-shimmer-wrapper span,
+.universal-shimmer-wrapper a,
+.universal-shimmer-wrapper button,
+.universal-shimmer-wrapper li,
+.universal-shimmer-wrapper label,
+.universal-shimmer-wrapper input,
+.universal-shimmer-wrapper textarea,
+.universal-shimmer-wrapper img,
+.universal-shimmer-wrapper .shimmer-target {
+  color: transparent !important;
+  background-color: #e2e8f0 !important; /* Base gray color */
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.4) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 100%
+  ) !important;
+  background-size: 200% 100% !important;
+  background-repeat: no-repeat !important;
+  animation: universalShimmer 1.5s infinite linear !important;
+  border-radius: 4px !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  text-decoration: none !important;
+}
+
+/* Hide actual image/svg content but keep layout box */
+.universal-shimmer-wrapper img,
+.universal-shimmer-wrapper svg,
+.universal-shimmer-wrapper video {
+  opacity: 0 !important;
+}
+
+/* Apply shimmer background to container itself if it has elements hidden (like images) */
+.universal-shimmer-wrapper img {
+  opacity: 1 !important; /* Reset opacity for img so background shows */
+  object-position: -9999px -9999px !important; /* Move actual image out of view */
+}
+
+@keyframes universalShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Exceptions: don't shimmer font icons or specific layout containers that might match tags */
+.universal-shimmer-wrapper i {
+  display: none !important;
+}
+
+.shimmer-generic-skeleton {
+  background-color: #f3f4f6;
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    rgba(255, 255, 255, 0.6) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: universalShimmer 1.5s infinite linear;
+}

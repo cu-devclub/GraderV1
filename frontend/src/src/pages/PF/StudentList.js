@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import { Download, Search, Funnel, FunnelFill, Trash, PencilSquare } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -59,8 +60,10 @@ function StudentList() {
   const [groups, setGroups] = useState([]);
   const [checkedGroups, setCheckedGroups] = useState([]);
   const [showGroupFilter, setShowGroupFilter] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const [ClassInfo, setClassInfo] = useState({});
+  const displayClassInfo = loading ? { ClassID: '0000000', ClassName: 'Loading Class Name...', ClassYear: '2024/1', Thumbnail: 'null' } : ClassInfo;
 
   const [showModal, setShowModal] = useState(false);
   const [showExportDropdown, setShowExportDropdown] = useState(false);
@@ -156,9 +159,7 @@ function StudentList() {
       }
     };
   
-    fetchClass();
-    fetchSection();
-    fetchName();
+    Promise.all([fetchClass(), fetchSection(), fetchName()]).finally(() => setLoading(false));
   }, [classId]);
 
   const handleExport = async () => {
@@ -459,19 +460,21 @@ function StudentList() {
       </style>
       <div style={{ flexShrink: 0 }}>
         <Navbar />
-        {ClassInfo && (
-        <div style={{ ...getCourseBannerStyle(ClassInfo['ClassID'] + ClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
-            <div>
-              <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{ClassInfo['ClassName']}</h2>
-              <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
-                {ClassInfo['ClassID']} • {ClassInfo['ClassYear']}
+        <Shimmer isLoading={loading}>
+          {displayClassInfo && (
+          <div className="responsive-banner" style={{ ...getCourseBannerStyle(displayClassInfo['ClassID'] + displayClassInfo['ClassName']), marginTop: '-60px', paddingTop: 'calc(3rem + 60px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '300px', marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img src={displayClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + displayClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+              <div>
+                <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{displayClassInfo['ClassName'] || '\u00A0'}</h2>
+                <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
+                  {displayClassInfo['ClassID'] || '.......'} • {displayClassInfo['ClassYear'] || '.......'}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        )}
+          )}
+        </Shimmer>
       </div>
 
       <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
@@ -517,6 +520,7 @@ function StudentList() {
         <div style={{ flexGrow: 1, paddingBottom: '10px' }}>
           {/* Loading indicator */}
           <div style={{ WebkitOverflowScrolling: 'touch' }}>
+            <Shimmer isLoading={loading}>
             <div>
             <table className="table" style={{ minWidth: '600px' }}>
               <thead className="sticky-table-header">
@@ -589,39 +593,44 @@ function StudentList() {
                   </tr>
               </thead>
               <tbody>
-          {showname.length !== 0 ? (
-              showname.filter(element => {
+          {(!loading && showname.length === 0) ? (
+            <tr><td colSpan="7" className="text-center text-muted" style={{ padding: '2rem' }}>No students found</td></tr>
+          ) : (
+            (loading ? [
+              { ID: "6330000000", "Name (English)": "Firstname Lastname Very Long", Section: "XX", Group: "XXX", Score: "10", MaxScore: "10" },
+              { ID: "6330000001", "Name (English)": "Another Student Long Name", Section: "XX", Group: "XXX", Score: "10", MaxScore: "10" },
+              { ID: "6330000002", "Name (English)": "Short Name", Section: "XX", Group: "XXX", Score: "10", MaxScore: "10" },
+              { ID: "6330000003", "Name (English)": "Medium Length Name", Section: "XX", Group: "XXX", Score: "10", MaxScore: "10" },
+              { ID: "6330000004", "Name (English)": "One More Student Name", Section: "XX", Group: "XXX", Score: "10", MaxScore: "10" }
+            ] : showname).filter(element => {
+                if(loading) return true; // Show dummy rows when loading
                 if((element["ID"] + element["Name (English)"]).toLowerCase().includes(searchQuery.toLowerCase()) && 
                    (checkedSections.length === 0 || checkedSections.includes(element["Section"])) &&
                    (checkedGroups.length === 0 || checkedGroups.includes(element["Group"])))
-                  return element;
+                  return true;
                 return false
               }).map((element, index) => (
-                  <tr key={index}>
-                      <th scope="row">{index + 1}</th>
-                      <td>{element["ID"]}</td>
-                      <td>{element["Name (English)"]}</td>
-                      <td className='text-center'>{element["Section"]}</td>
-                      <td className='text-center'>{element["Group"]}</td>
-                      <td className='text-center'>{element["Score"]}/{element["MaxScore"]}</td>
+                  <tr key={index} className={loading ? 'shimmer-target-container' : ''}>
+                      <th scope="row"><span className="shimmer-target">{index + 1}</span></th>
+                      <td style={{ minWidth: '80px' }}><span className="shimmer-target">{element["ID"]}</span></td>
+                      <td style={{ minWidth: '150px' }}><span className="shimmer-target">{element["Name (English)"]}</span></td>
+                      <td className='text-center'><span className="shimmer-target">{element["Section"]}</span></td>
+                      <td className='text-center'><span className="shimmer-target">{element["Group"]}</span></td>
+                      <td className='text-center'><span className="shimmer-target">{element["Score"]}/{element["MaxScore"]}</span></td>
                       <td className='text-center'>
-                        <button type="button" className="btn btn-warning" onClick={() => {handleEditStudent(element)}}>
-                          <PencilSquare/>
-                        </button>
+                        {!loading && (
+                          <button type="button" className="btn btn-warning" onClick={() => {handleEditStudent(element)}}>
+                            <PencilSquare/>
+                          </button>
+                        )}
                       </td>
                   </tr>
               ))
-            ) : (
-            <tr>
-                <th scope="row"></th>
-                <td>No data</td>
-                <td></td>
-            </tr>
-            )
-          }
-            </tbody>
+          )}
+          </tbody>
           </table>
           </div>
+          </Shimmer>
           </div>
           <br />
         </div>

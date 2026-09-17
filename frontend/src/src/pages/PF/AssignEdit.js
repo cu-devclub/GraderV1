@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar'
 import PinInput from '../../components/pin';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash, ArrowLeftCircle, X, Paperclip } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
@@ -16,6 +17,7 @@ function AssignEdit() {
   const location = useLocation();
   // Tab state
   const [currentTab, setCurrentTab] = useState(location.state?.tab || 'Detail');
+  const [loading, setLoading] = useState(true);
 
   // Modal
   const [showModal, setShowModal] = useState(false)

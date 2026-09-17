@@ -1,6 +1,7 @@
 /coverage
 /pjconfig
 .env
+.env.test
 client_secrets.json
 node_modules
 api/src/files

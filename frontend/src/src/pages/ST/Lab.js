@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { CodeSlash, FileEarmark, Download } from 'react-bootstrap-icons';
+import Shimmer from '../../components/Shimmer';
 // import PinInput from '../../components/pin';
 
 const host = `${process.env.REACT_APP_HOST}`;
@@ -41,7 +42,9 @@ const getCourseBannerStyle = (courseStr) => {
 function Lab() {
   const navigate = useNavigate();
   
-  const [ClassInfo, setClassInfo] = useState({})
+  const [ClassInfo, setClassInfo] = useState({});
+  const [loading, setLoading] = useState(true);
+  const displayClassInfo = loading ? { ClassID: '0000000', ClassName: 'Loading Class Name...', ClassYear: '2024/1', Thumbnail: 'null' } : ClassInfo;
 
   const [Email,] = useState(Cookies.get('Email'));
   const [LID,] = useState(sessionStorage.getItem("LID"))
@@ -107,8 +110,7 @@ function Lab() {
       }
     };
 
-    fetchData();
-    fetchClass();
+    Promise.all([fetchData(), fetchClass()]).finally(() => setLoading(false));
   }, [LID, classId, Email]);
 
   const tiketQR = useCallback(async (Type) => {
@@ -574,19 +576,21 @@ function Lab() {
           `}
       </style>
       <Navbar />
-      {ClassInfo && (
-      <div className="responsive-banner" style={{ ...getCourseBannerStyle(ClassInfo['ClassID'] + ClassInfo['ClassName']), marginTop: '-30px', paddingTop: 'calc(3rem + 30px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '200px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
+      <Shimmer isLoading={loading}>
+      {displayClassInfo && (
+      <div className="responsive-banner" style={{ ...getCourseBannerStyle(displayClassInfo['ClassID'] + displayClassInfo['ClassName']), marginTop: '-30px', paddingTop: 'calc(3rem + 30px)', paddingRight: '10vw', paddingBottom: '3rem', paddingLeft: '10vw', width: '100%', minHeight: '200px', marginBottom: '2rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src={ClassInfo['Thumbnail'] ? `${host}/Thumbnail/` + ClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
+          <img src={displayClassInfo['Thumbnail'] && displayClassInfo['Thumbnail'] !== 'null' ? `${host}/Thumbnail/` + displayClassInfo['Thumbnail'] : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} alt="course" style={{ width: '80px', height: '80px', borderRadius: '50%', marginRight: '1.5rem', objectFit: 'cover', border: 'none', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }} />
           <div>
-            <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{ClassInfo['ClassName']}</h2>
+            <h2 style={{ fontWeight: 'bold', margin: 0, fontSize: '2.5rem', letterSpacing: '-0.5px' }}>{displayClassInfo['ClassName'] || '\u00A0'}</h2>
             <div style={{ display: 'inline-block', background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0.2) 100%)', backdropFilter: 'blur(20px) saturate(180%)', WebkitBackdropFilter: 'blur(20px) saturate(180%)', padding: '0.3rem 1rem', borderRadius: '20px', fontWeight: 'bold', fontSize: '0.95rem', marginTop: '0.8rem', color: '#1f2937', border: '1px solid rgba(255, 255, 255, 0.5)', borderTop: '1px solid rgba(255,255,255,0.8)', borderLeft: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.8)', textShadow: '0 1px 1px rgba(255,255,255,0.5)' }}>
-              {ClassInfo['ClassID']} • {ClassInfo['ClassYear']}
+              {displayClassInfo['ClassID'] || '.......'} • {displayClassInfo['ClassYear'] || '.......'}
             </div>
           </div>
         </div>
       </div>
       )}
+      </Shimmer>
 
       <div className="card" style={{ marginLeft: '10em', marginRight: '10em' }}>
         <div className="card-header">

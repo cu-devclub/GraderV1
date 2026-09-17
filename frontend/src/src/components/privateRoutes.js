@@ -13,15 +13,7 @@ function PrivateRoutes() {
     useEffect(() => {
         const checkAuth = async () => {
             try {
-                withReactContent(Swal).fire({
-                    html: `<div class="pos-center">
-                                <div class="loader"></div>
-                            </div> `,
-                    showCloseButton: false,
-                    showCancelButton: false,
-                    showConfirmButton: false,
-                    background: "rgba(0, 0, 0, 0)"
-                })
+
                 const response = await fetch(`${process.env.REACT_APP_HOST}/glob/auth/checkauth`, {
                     method: "GET",
                     credentials: "include",
@@ -53,7 +45,6 @@ function PrivateRoutes() {
                 setToken(false);
             } finally {
                 setLoading(false);
-                withReactContent(Swal).close()
             }
         };
 
@@ -77,7 +68,7 @@ function PrivateRoutes() {
     }
 
     if (loading) {
-        return <div></div>;
+        return checkremem();
     }
 
     return Token ? checkremem() : remem();

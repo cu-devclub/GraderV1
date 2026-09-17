@@ -1,22 +1,22 @@
 services:
-  backend:
+  backend-test:
     image: ghcr.io/cu-devclub/graderv1:api-testing
     container_name: backend-test
     restart: unless-stopped
     volumes:
-      - ~/grader/files:/files
+      - ~/grader/files-test:/files
     depends_on:
       - mysql
     environment:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       PORT: "5000"
       HOST: "0.0.0.0"
-      DEV: "False"
+      DEV: "True"
       DBHOST: mysql
       DBUSER: ${DB_USER:-grader}
       DBPASS: ${DB_PASSWORD:-graderpassword}
       DBNAME: ${DB_NAME:-grader_test}
-      DOMAIN: ${DOMAIN:-https://sci.cugrader.com}
+      DOMAIN: ${DOMAIN:-https://test.cugrader.com}
       PUBKEY: ${ASSIGNMENT_RSA_PUBLIC_KEY:-${PUBKEY}}
       PRIKEY: ${ASSIGNMENT_RSA_PRIVATE_KEY:-${PRIKEY}}
       PYTHONUNBUFFERED: "1"
@@ -26,12 +26,12 @@ services:
     labels:
       - "com.centurylinklabs.watchtower.enable=true"
 
-  frontend:
+  frontend-test:
     image: ghcr.io/cu-devclub/graderv1:frontend-testing
     container_name: frontend-test
     restart: unless-stopped
     depends_on:
-      - backend
+      - backend-test
     networks:
       - grader-network
     labels:

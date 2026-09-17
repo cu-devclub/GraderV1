@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar'
 import { useNavigate } from 'react-router-dom';
 import { ThreeDotsVertical } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -196,128 +197,141 @@ function HomePF() {
           )}
 
 
-      {courses && Object.keys(courses).length > 0 && ready ? (
+      <Shimmer isLoading={!courses}>
         <main>
           <div>
             <br></br>
             <div className="container-lg mb-3" style={{ padding: '10px' }}>
-              <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
-                {Object.keys(courses).map(year => (
+              <select className="form-select shimmer-target" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
+                {Object.keys(courses || {}).map(year => (
                   <option key={year} value={year}>{year}</option>
                 ))}
               </select>
-              {expandedYear && courses[expandedYear] && (
-                <div className="row row-cols-1 row-cols-md-5 g-2">
-                  {courses[expandedYear].map(course => (
-                    <div className="card custom-hover-card" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
-                      onClick={() => {sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/AssignList");}}
-                    >
-                      <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
-                        <img className="card-img-top w-100 d-block" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
-                      </div>
-                      <div className="card-body" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <h5 className="card-title fw-bold text-dark" style={{ marginBottom: '8px', flex: 1, minWidth: 0 }}>
-                            {course.ClassName}
-                            {course.Archive && <span className="badge bg-secondary ms-2 align-text-top" style={{fontSize: '0.7rem', fontWeight: '500'}}>Archived</span>}
-                          </h5>
-                          <div style={{ position: 'relative' }} ref={openMenuId === course.ID ? menuRef : null}>
-                            <button
-                              className="btn btn-link p-0 text-muted hover-dark"
-                              type="button"
-                              style={{ fontSize: '1.2rem', textDecoration: 'none' }}
-                              onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === course.ID ? null : course.ID); }}
-                            >
-                              <ThreeDotsVertical />
-                            </button>
-                            {openMenuId === course.ID && (
-                              <div style={{
-                                position: 'absolute', right: 0, top: '100%', zIndex: 10,
-                                background: 'white', border: '1px solid #e9ecef', borderRadius: '8px',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '140px', padding: '4px 0'
-                              }}>
-                                <button
-                                  className="dropdown-item"
-                                  style={{ padding: '8px 16px', width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setOpenMenuId(null);
-                                    sessionStorage.setItem("Thumbnail", course.Thumbnail);
-                                    sessionStorage.setItem("classId", course.ID);
-                                    sessionStorage.setItem("ClassID", course.ClassID);
-                                    sessionStorage.setItem("SchoolYear", expandedYear);
-                                    sessionStorage.setItem("ClassName", course.ClassName);
-                                    sessionStorage.setItem("Archive", course.Archive);
-                                    navigate("/ClassEdit");
-                                  }}
-                                >
-                                  Edit course
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                        <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
-                          <i className="bi bi-hash me-1"></i>{course.ClassID}
-                          <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{expandedYear}</span>
-                        </p>
-                      </div>
+              
+              <div className="row row-cols-1 row-cols-md-5 g-2">
+                {(!courses ? [
+                  { ClassID: "dummy1", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy2", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy3", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy4", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy5", ClassName: " ", Thumbnail: "" }
+                ] : (courses[expandedYear] || [])).map(course => (
+                  <div className="card custom-hover-card shimmer-target-container" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: (!courses) ? 'default' : 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
+                    onClick={() => {
+                      if (courses) {
+                        sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/AssignList");
+                      }
+                    }}
+                  >
+                    <div className="shimmer-target" style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
+                      <img className="card-img-top w-100 d-block shimmer-target" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div className="card-body" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <h5 className="card-title fw-bold text-dark shimmer-target" style={{ marginBottom: '8px', flex: 1, minWidth: '100px', display: 'inline-block' }}>
+                          {course.ClassName || '\u00A0'}
+                          {course.Archive && <span className="badge bg-secondary ms-2 align-text-top" style={{fontSize: '0.7rem', fontWeight: '500'}}>Archived</span>}
+                        </h5>
+                        <div style={{ position: 'relative' }} ref={openMenuId === course.ID ? menuRef : null}>
+                          <button
+                            className="btn btn-link p-0 text-muted hover-dark shimmer-target"
+                            type="button"
+                            style={{ fontSize: '1.2rem', textDecoration: 'none' }}
+                            onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === course.ID ? null : course.ID); }}
+                          >
+                            <ThreeDotsVertical />
+                          </button>
+                          {openMenuId === course.ID && (
+                            <div style={{
+                              position: 'absolute', right: 0, top: '100%', zIndex: 10,
+                              background: 'white', border: '1px solid #e9ecef', borderRadius: '8px',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.1)', minWidth: '140px', padding: '4px 0'
+                            }}>
+                              <button
+                                className="dropdown-item"
+                                style={{ padding: '8px 16px', width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMenuId(null);
+                                  sessionStorage.setItem("Thumbnail", course.Thumbnail);
+                                  sessionStorage.setItem("classId", course.ID);
+                                  sessionStorage.setItem("ClassID", course.ClassID);
+                                  sessionStorage.setItem("SchoolYear", expandedYear);
+                                  sessionStorage.setItem("ClassName", course.ClassName);
+                                  sessionStorage.setItem("Archive", course.Archive);
+                                  navigate("/ClassEdit");
+                                }}
+                              >
+                                Edit course
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="card-text text-muted shimmer-target" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                        <i className="bi bi-hash me-1 shimmer-target"></i>{course.ClassID}
+                        <span className="badge bg-light text-secondary border ms-auto px-2 py-1 shimmer-target" style={{ fontWeight: '500' }}>{expandedYear}</span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </main>
-      ) : (
-        "")}
+      </Shimmer>
         
-      {(classes && Object.keys(classes).length > 0) && ready ? (
-          <div>
-            {courses && Object.keys(courses).length > 0 && (
-              <div className="container-lg">
-                <hr className="my-4" style={{ borderTop: '2px solid #dee2e6' }} />
-              </div>
+      <Shimmer isLoading={!classes}>
+        <div>
+          {courses && Object.keys(courses).length > 0 && (
+            <div className="container-lg">
+              <hr className="my-4" style={{ borderTop: '2px solid #dee2e6' }} />
+            </div>
+          )}
+          <br></br>
+          <div className="container-lg mb-3" style={{ padding: '10px' }}>
+            {(!courses || Object.keys(courses).length === 0) && (
+              <select className="form-select shimmer-target" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
+                {Object.keys(classes || {}).map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
             )}
-            <br></br>
-            <div className="container-lg mb-3" style={{ padding: '10px' }}>
-              {(!courses || Object.keys(courses).length === 0) && (
-                <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
-                  {Object.keys(classes).map(year => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              )}
-              {expandedYear && classes[expandedYear] ? (
-                <div className="mb-4">
-                  <h6 className="text-muted mb-3" style={{ paddingLeft: '10px', color: 'gray' }}>Student view (Year {expandedYear})</h6>
-                  <div className="row row-cols-1 row-cols-md-5 g-2">
-                    {classes[expandedYear].map((course) => (
-                      <div className="card custom-hover-card" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
-                        onClick={() => {sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/Class");}}
-                      >
-                        <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
-                          <img className="card-img-top w-100 d-block" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
-                        </div>
-                        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
-                          <h5 className="card-title fw-bold text-dark" style={{ marginBottom: '8px' }}>{course.ClassName}</h5>
-                          <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
-                            <i className="bi bi-hash me-1"></i>{course.ClassID}
-                            <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{expandedYear}</span>
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+            
+            <div className="mb-4">
+              <h6 className="text-muted mb-3 shimmer-target" style={{ paddingLeft: '10px', color: 'gray', display: 'inline-block' }}>Student view (Year {expandedYear || '...'})</h6>
+              <div className="row row-cols-1 row-cols-md-5 g-2">
+                {(!classes ? [
+                  { ClassID: "dummy1", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy2", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy3", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy4", ClassName: " ", Thumbnail: "" },
+                  { ClassID: "dummy5", ClassName: " ", Thumbnail: "" }
+                ] : (classes[expandedYear] || [])).map((course) => (
+                  <div className="card custom-hover-card shimmer-target-container" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: (!classes) ? 'default' : 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
+                    onClick={() => {
+                      if (classes) {
+                        sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/Class");
+                      }
+                    }}
+                  >
+                    <div className="shimmer-target" style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
+                      <img className="card-img-top w-100 d-block shimmer-target" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
+                    </div>
+                    <div className="card-body" style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
+                      <h5 className="card-title fw-bold text-dark shimmer-target" style={{ marginBottom: '8px', minWidth: '100px', display: 'inline-block' }}>{course.ClassName || '\u00A0'}</h5>
+                      <p className="card-text text-muted shimmer-target" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
+                        <i className="bi bi-hash me-1 shimmer-target"></i>{course.ClassID}
+                        <span className="badge bg-light text-secondary border ms-auto px-2 py-1 shimmer-target" style={{ fontWeight: '500' }}>{expandedYear}</span>
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="mb-4">
-                  <h6 className="text-muted mb-3" style={{ paddingLeft: '10px', color: 'gray' }}>Student view - No classes for Year {expandedYear}</h6>
-                </div>
-              )}
+                ))}
+              </div>
             </div>
           </div>
-      ) : (null)}
+        </div>
+      </Shimmer>
     </div>
   )
 }

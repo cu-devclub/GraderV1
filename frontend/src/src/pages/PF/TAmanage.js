@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { Search, X } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
 
@@ -13,6 +14,7 @@ function TAmanage() {
     const navigate = useNavigate();
 
     const [TAList, setTAList] = useState([]);
+  const [loading, setLoading] = useState(true);
     const [AddMail, setAddMail] = useState("");
     const [Keyword, setKeyword] = useState("");
     const [CSYID, ] = useState(sessionStorage.getItem("CSYID"))
@@ -178,7 +180,7 @@ function TAmanage() {
                             </ul>
                         </div>
                         <div className="col-md-2">
-                            <button className="btn btn-primary float-end" type="button" onClick={() => navigate("/")}>Back</button>
+                            <button className="btn btn-dark float-end" type="button" style={{ borderRadius: "20px", padding: "8px 20px", fontWeight: "bold", border: "none" }} onClick={() => navigate("/")}>Back</button>
                         </div>
                     </div>
                 </div>
@@ -186,18 +188,18 @@ function TAmanage() {
                     <div className='row'>
                         <div className='col'>
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder="Email of new TA" onChange={handleAddEmailChange}/>
+                                <input type="text" className="form-control" placeholder="Email of new TA" onChange={handleAddEmailChange} style={{ borderTopLeftRadius: "20px", borderBottomLeftRadius: "20px", paddingLeft: "20px" }}/>
                                 <div className="input-group-append">
-                                    <button className="btn btn-success" type="button" onClick={handleAdd}>Add</button>
+                                    <button className="btn" type="button" onClick={handleAdd} style={{ backgroundColor: "#e25595", color: "white", border: "none", borderTopRightRadius: "20px", borderBottomRightRadius: "20px", padding: "8px 20px", fontWeight: "bold", zIndex: 0 }}>Add</button>
                                 </div>
                             </div>
                         </div>
                         <div className='col'></div>
                         <div className='col'>
                             <div className="input-group mb-3">
-                                <input type="text" className="form-control" placeholder='Search...' value={Keyword} onChange={handleSearchChange}/>
+                                <input type="text" className="form-control" placeholder='Search...' value={Keyword} onChange={handleSearchChange} style={{ borderTopLeftRadius: "20px", borderBottomLeftRadius: "20px", paddingLeft: "20px" }}/>
                                 <div className="input-group-append">
-                                    <span className="input-group-text" style={{height: "37.6px", backgroundColor: "transparent", borderTopLeftRadius: "0", borderBottomLeftRadius: "0"}}><Search /></span>
+                                    <span className="input-group-text" style={{height: "100%", minHeight: "40px", backgroundColor: "transparent", borderTopLeftRadius: "0", borderBottomLeftRadius: "0", borderTopRightRadius: "20px", borderBottomRightRadius: "20px"}}><Search /></span>
                                 </div>
                             </div>
                         </div>
@@ -224,7 +226,7 @@ function TAmanage() {
                                         <td>{element[1]}</td>
                                         {
                                             (Email !== element[0] && ClassCreator !== element[0]) ? 
-                                                <td><button type="button" className="btn btn-danger" onClick={() => handleRemove(element[0])}><X /></button></td> 
+                                                <td><button type="button" className="btn btn-outline-danger btn-sm" style={{ borderRadius: "20px", padding: "2px 10px", fontWeight: "bold" }} onClick={() => handleRemove(element[0])}><X size={20} /></button></td> 
                                                 : <td></td>
                                         }
                                         

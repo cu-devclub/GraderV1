@@ -3,9 +3,9 @@ import Navbar from '../../components/Navbar.js';
 import { useNavigate } from 'react-router-dom';
 import { ThreeDotsVertical } from 'react-bootstrap-icons';
 import Cookies from 'js-cookie';
+import Shimmer from '../../components/Shimmer';
 
 const host = `${process.env.REACT_APP_HOST}`
-
 
 function HomeST() {
   const navigate = useNavigate();
@@ -16,7 +16,12 @@ function HomeST() {
   const [expandedYear, setExpandedYear] = useState();
   const [ready, setReady] = useState(null);
   const [openMenuId, setOpenMenuId] = useState(null);
+  const [loading, setLoading] = useState(true);
   const menuRef = useRef(null);
+
+  const displayCourses = loading ? { 'Loading...': [{ ID: 'dummy1', ClassName: 'Loading Class Name...', ClassID: '0000000' }] } : courses;
+  const displayClasses = loading ? { 'Loading...': [{ ID: 'dummy1', ClassName: 'Loading Class Name...', ClassID: '0000000' }] } : classes;
+  const displayExpandedYear = loading ? 'Loading...' : expandedYear;
 
   const [Email,] = useState(Cookies.get('Email'));
 
@@ -79,9 +84,10 @@ function HomeST() {
       }
     };
 
-    fetchData()
-    fetchCourses()
-    setReady(true);
+    Promise.all([fetchData(), fetchCourses()]).finally(() => {
+      setLoading(false);
+      setReady(true);
+    });
   }, [Email]);
   
   useEffect(() => {
@@ -107,25 +113,30 @@ function HomeST() {
         <Navbar userData={userData}/>
         <br />
       </div>
-      {(courses && ready) ? (
-        Object.keys(courses).length !== 0 ? (
+      {(displayCourses && (ready || loading)) ? (
+        Object.keys(displayCourses).length !== 0 ? (
         <main>
           <div>
             <br></br>
             <div className="container-lg mb-3" style={{ padding: '10px' }}>
-              <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
-                {Object.keys(courses).map(year => (
+              <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={displayExpandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
+                {Object.keys(displayCourses).map(year => (
                   <option key={year} value={year}>{year}</option>
                 ))}
               </select>
-              {expandedYear && courses[expandedYear] && (
+              {displayExpandedYear && displayCourses[displayExpandedYear] && (
+                <Shimmer isLoading={loading}>
                 <div className="row row-cols-1 row-cols-md-5 g-2">
-                  {courses[expandedYear].map(course => (
-                    <div className="card custom-hover-card" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease', opacity: course.Archive ? 0.3 : 1}} key={course.ClassID}
-                      onClick={() => {sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/AssignList");}}
+                  {displayCourses[displayExpandedYear].map(course => (
+                    <div className="card custom-hover-card shimmer-target-container" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: loading ? 'default' : 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease', opacity: course.Archive ? 0.3 : 1}} key={course.ClassID}
+                      onClick={() => {
+                        if (!loading) {
+                          sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/AssignList");
+                        }
+                      }}
                     >
                       <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
-                        <img className="card-img-top w-100 d-block" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
+                        <img className="card-img-top w-100 d-block" src={course.Thumbnail && course.Thumbnail !== 'null' ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
                       </div>
                       <div className="card-body" style={{ position: 'relative', display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -167,59 +178,66 @@ function HomeST() {
                         </div>
                         <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
                           <i className="bi bi-hash me-1"></i>{course.ClassID}
-                          <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{expandedYear}</span>
+                          <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{displayExpandedYear}</span>
                         </p>
                       </div>
                     </div>
                   ))}
                 </div>
+                </Shimmer>
               )}
             </div>
           </div>
         </main>
       ) : (null)) : (null)}
 
-      {(classes && Object.keys(classes).length > 0) && ready ? (
+      {(displayClasses && Object.keys(displayClasses).length > 0) && (ready || loading) ? (
           <div>
-            {courses && Object.keys(courses).length > 0 && (
+            {displayCourses && Object.keys(displayCourses).length > 0 && (
               <div className="container-lg">
                 <hr className="my-4" style={{ borderTop: '2px solid #dee2e6' }} />
               </div>
             )}
             <br></br>
             <div className="container-lg mb-3" style={{ padding: '10px' }}>
-              {(!courses || Object.keys(courses).length === 0) && (
-                <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={expandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
-                  {Object.keys(classes).map(year => (
+              {(!displayCourses || Object.keys(displayCourses).length === 0) && (
+                <select className="form-select" style={{ width: '200px', marginBottom: '10px' }} value={displayExpandedYear || ''} onChange={(e) => setExpandedYear(e.target.value)}>
+                  {Object.keys(displayClasses).map(year => (
                     <option key={year} value={year}>{year}</option>
                   ))}
                 </select>
               )}
-              {expandedYear && classes[expandedYear] ? (
+              {displayExpandedYear && displayClasses[displayExpandedYear] ? (
                 <div className="mb-4">
-                  <h5 className="text-muted mb-3" style={{ paddingLeft: '10px' }}>Student Classes (Year {expandedYear})</h5>
+                  <h5 className="text-muted mb-3" style={{ paddingLeft: '10px' }}>Student Classes (Year {displayExpandedYear})</h5>
+                  <Shimmer isLoading={loading}>
                   <div className="row row-cols-1 row-cols-md-5 g-2">
-                    {classes[expandedYear].map((course) => (
-                      <div className="card custom-hover-card" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
-                        onClick={() => {sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/Class");}}
+                    {displayClasses[displayExpandedYear].map((course) => (
+                      <div className="card custom-hover-card shimmer-target-container" style={{width: '300px', marginLeft: "10px", marginRight: "10px", cursor: loading ? 'default' : 'pointer', overflow: 'hidden', borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.3s ease'}} key={course.ClassID}
+                        onClick={() => {
+                          if (!loading) {
+                            sessionStorage.setItem("classId", course.ID); sessionStorage.setItem("Email", Email); navigate("/Class");
+                          }
+                        }}
                       >
                         <div style={{ width: '100%', height: '190px', overflow: 'hidden', backgroundColor: '#f8f9fa' }}>
-                          <img className="card-img-top w-100 d-block" src={course.Thumbnail ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
+                          <img className="card-img-top w-100 d-block" src={course.Thumbnail && course.Thumbnail !== 'null' ? `${host}/Thumbnail/` + course.Thumbnail : "https://cdn-icons-png.flaticon.com/512/3643/3643327.png"} style={{ width: '100%', height: '100%', objectFit: 'contain', borderTopLeftRadius: '12px', borderTopRightRadius: '12px'}} alt="..."/>
                         </div>
                         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', flex: 1, padding: '20px' }}>
                           <h5 className="card-title fw-bold text-dark" style={{ marginBottom: '8px' }}>{course.ClassName}</h5>
                           <p className="card-text text-muted" style={{ marginBottom: '0', marginTop: 'auto', fontSize: '0.9rem', display: 'flex', alignItems: 'center' }}>
                             <i className="bi bi-hash me-1"></i>{course.ClassID}
-                            <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{expandedYear}</span>
+                            <span className="badge bg-light text-secondary border ms-auto px-2 py-1" style={{ fontWeight: '500' }}>{displayExpandedYear}</span>
                           </p>
                         </div>
                       </div>
                     ))}
                   </div>
+                  </Shimmer>
                 </div>
               ) : (
                 <div className="mb-4">
-                  <h5 className="text-muted mb-3" style={{ paddingLeft: '10px' }}>No student classes for Year {expandedYear}</h5>
+                  <h5 className="text-muted mb-3" style={{ paddingLeft: '10px' }}>No student displayClasses for Year {displayExpandedYear}</h5>
                 </div>
               )}
             </div>

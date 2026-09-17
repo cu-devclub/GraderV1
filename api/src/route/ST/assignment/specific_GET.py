@@ -74,8 +74,8 @@ def main():
             "Lock": lock,
             "Lab": lab_info_row[0],
             "Name": lab_info_row[1],
-            "Publish": datetime.strptime(str(lab_info_row[2]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
-            "Due": datetime.strptime(str(lab_info_row[3]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M"),
+            "Publish": datetime.strptime(str(lab_info_row[2]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M") if lab_info_row[2] else None,
+            "Due": datetime.strptime(str(lab_info_row[3]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M") if lab_info_row[3] else None,
             "Late": bool(int(lab_info_row[4])),
             "Access": isAccess(g.db, cur, public_ip, Email=Email, LID=LID),
             "Exam": lab_info_row[5]
