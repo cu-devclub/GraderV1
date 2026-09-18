@@ -53,7 +53,23 @@ def checkPermAddDown(ID, Email, cur):
         cur.execute(query_classeditor, (Email, CSYID))
         result_classeditor = cur.fetchone()
 
-        return result_classeditor is not None
+        if result_classeditor is not None:
+            # Also check if it's an exam mode lab and if they have TA access
+            query_role = "SELECT Role FROM user WHERE Email = %s"
+            cur.execute(query_role, (Email,))
+            role_result = cur.fetchone()
+            if role_result and str(role_result[0]) == '1':
+                query_exam = "SELECT Exam FROM lab WHERE LID = %s"
+                cur.execute(query_exam, (LID,))
+                exam_res = cur.fetchone()
+                if exam_res and int(exam_res[0]) == 1:
+                    query_acc = "SELECT 1 FROM taexamaccess WHERE LID = %s AND Email = %s"
+                    cur.execute(query_acc, (LID, Email))
+                    if not cur.fetchone():
+                        return False
+            return True
+
+        return False
 
     except Exception as e:
         print(f"Error in checkPermAddDown: {e}")

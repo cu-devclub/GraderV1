@@ -17,10 +17,14 @@ def main():
     conn = get_db()
     cur = conn.cursor()
 
+    from function.hasAccess import hasAccess
+    Role = get_jwt_identity().get('role', '1')
+
     query = """ 
         SELECT
             SM.CSYID,
-            SM.SummitedFile
+            SM.SummitedFile,
+            SM.LID
         FROM
             `submitted` SM
         WHERE 
@@ -36,8 +40,14 @@ def main():
             'data': {}
         }), 200
 
-
     if not isCET(conn, cur, Email=Email, CSYID=data[0]):
+        return jsonify({
+            'success': False,
+            'msg': 'You do not have access to this file.',
+            'data': ""
+        }), 200
+
+    if not hasAccess(conn, cur, Email, Role, data[2]):
         return jsonify({
             'success': False,
             'msg': 'You do not have access to this file.',

@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Shimmer from '../../components/Shimmer';
 import PinInput from '../../components/pin';
-import { ArrowLeftCircle, X, Paperclip, Plus } from 'react-bootstrap-icons';
+import { ArrowLeftCircle, X, Paperclip, Plus, ArrowsFullscreen } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -362,9 +362,15 @@ function AssignCreate() {
 
   const handleShowPin = () => {
     withReactContent(Swal).fire({
-      title: "Current Exam Pin",
-      html: `<div style="font-size: 3rem; font-weight: bold; letter-spacing: 10px; color: #2b3a67;">${examPin}</div>`,
-      confirmButtonText: "Close"
+      title: <div style={{ color: '#475569', fontWeight: 'bold', fontSize: '2.5rem', marginBottom: '1rem' }}>Exam pin</div>,
+      html: `
+        <div style="border: 2px solid #cbd5e1; border-radius: 20px; padding: 4rem; display: flex; justify-content: center; align-items: center; background-color: #f8fafc; height: 50vh;">
+          <span style="font-size: 12rem; font-weight: bold; color: #334155; letter-spacing: 16px;">${examPin}</span>
+        </div>
+      `,
+      showCloseButton: true,
+      showConfirmButton: false,
+      width: '80vw',
     });
   };
 
@@ -572,12 +578,12 @@ function AssignCreate() {
                     </div>
                     <button 
                       type="button" 
-                      className="btn btn-outline-secondary" 
+                      className="btn btn-outline-dark" 
                       onClick={handleShowPin} 
                       disabled={!isExam}
-                      style={{ marginTop: '1rem', width: '100%' }}
+                      style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                     >
-                      Show pin to student
+                      <ArrowsFullscreen size={16} /> Show pin fullscreen
                     </button>
                   </div>
                 </div>

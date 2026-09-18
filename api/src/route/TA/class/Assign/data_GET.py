@@ -129,6 +129,16 @@ def main():
         cursor.execute(query, (LID,))
         addfiles = cursor.fetchall()
         
+        hasAccess = True
+        identity = get_jwt_identity()
+        Role = str(identity.get('role', '1'))
+        if Role == '1' and bool(int(data[9])): # Exam mode
+            # Check access
+            query_acc = "SELECT ID FROM taexamaccess WHERE LID = %s AND Email = %s"
+            cursor.execute(query_acc, (LID, Email))
+            if not cursor.fetchone():
+                hasAccess = False
+
         return jsonify({
             'success': True,
             'msg': '',
@@ -146,7 +156,8 @@ def main():
                 "Selected": [PreSelectList[int(i)] for i in newD5.strip("[] ").split(",") if i.strip().isdigit() and int(i) in PreSelectList],
                 "SelectList": list(PreSelectList.values()),
                 "Question": [{"id": i+1, "QID": questions[i][0], "score": int(questions[i][1])} for i in range(len(questions))],
-                "addfile": [[file[0], os.path.basename(file[1]), file[2] == 0] for file in addfiles]
+                "addfile": [[file[0], os.path.basename(file[1]), file[2] == 0] for file in addfiles],
+                "hasAccess": hasAccess
             }
         }), 200
     
