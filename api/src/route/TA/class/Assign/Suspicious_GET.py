@@ -43,6 +43,15 @@ def main():
             'data': {}
         }), 200
 
+    from function.hasAccess import hasAccess
+    Role = get_jwt_identity().get('role', '1')
+    if not hasAccess(conn, cursor, Email, Role, LID):
+        return jsonify({
+            'success': False,
+            'msg': 'You do not have access to this exam.',
+            'data': {}
+        }), 200
+
     try:
         # Select QID from question table
         cursor.execute("SELECT QID FROM question WHERE LID = %s ORDER BY QID", (LID,))

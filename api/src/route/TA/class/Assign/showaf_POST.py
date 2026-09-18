@@ -29,7 +29,7 @@ def main():
         }), 200
     
     if not isCET(conn, cur, Email, data.get("CSYID")):
-        jsonify({
+        return jsonify({
             'success': False,
             'msg': "You don't have permission.",
             'data': {}
