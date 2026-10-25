@@ -70,6 +70,9 @@ def update_database(conn, cursor, questions, qnum, source_files, release_files, 
                 WHERE QID = %s AND LID = %s
             ''', (max_score, source_path, release_path, current_qid, lid))
 
+            if isSourceUpdate or str(i) in release_files:
+                cursor.execute('UPDATE question SET LastEdit = %s WHERE QID = %s AND LID = %s', (datetime.now(gmt_timezone), current_qid, lid))
+
             if isSourceUpdate:
                 regrade(conn, cursor, True, current_qid, lid)
                 # select_query = "SELECT Path FROM addfile WHERE LID = %s"
