@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives import serialization
 
 from function.isAccess import isAccess
+from function.isOtherIPCheckedOut import isOtherIPCheckedOut
 from function.loadconfig import config
 from function.db import get_db
 
@@ -100,7 +101,15 @@ def main():
             'msg': 'You already have access to this lab.',
             'data': ""
         }), 200
-    
+
+    # only one IP per UID is allowed in exam mode
+    if isOtherIPCheckedOut(cur, Email.split('@')[0], LID, public_ip):
+        return jsonify({
+            'success': False,
+            'msg': 'You are already checked in from another device. Please contact TA.',
+            'data': ""
+        }), 200
+
     # check if failed attemp reached limit
     cur.execute(
         "SELECT Attempt FROM pinattempt WHERE LID = %s AND UID = %s AND IP = %s",
