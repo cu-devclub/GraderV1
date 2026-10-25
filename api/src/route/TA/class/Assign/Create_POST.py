@@ -23,8 +23,10 @@ def main():
 
     form = request.form
 
+    Role = str(get_jwt_identity().get('role', '1'))
+
     if not isCET(conn, cursor, Email, form["CSYID"]):
-        jsonify({
+        return jsonify({
             'success': False,
             'msg': "You don't have permission.",
             'data': {}
@@ -34,7 +36,7 @@ def main():
 
         Source_files = [v for k, v in request.files.items() if k.startswith("Source")]
         Release_files = [v for k, v in request.files.items() if k.startswith("Release")]
-        Additional_files = [v for k, v in request.files.items() if k.startswith("Add")]
+        Additional_files = [(v, 1 if form.get(f"Hide{k}") == 'true' else 0) for k, v in request.files.items() if k.startswith("Add")]
         AddFileForQinfo = []
 
         LockOnDue = form["DueDate"] if form['LockOnDue'] == 'true' else None
@@ -58,18 +60,35 @@ def main():
             cursor.execute(addpin, (LID, form["ExamPin"], datetime.now(gmt_timezone)))
             conn.commit()
 
+            # TA access for exam mode, only TAs of this class can be granted
+            if Role == '2':
+                TAAccess = json.loads(form.get("TAAccess") or "[]")
+                if TAAccess:
+                    cursor.execute(f"""
+                        SELECT u.Email
+                        FROM user u
+                        JOIN classeditor ce ON u.Email = ce.Email
+                        WHERE ce.CSYID = %s AND u.Role = '1' AND u.Email IN ({",".join(["%s"]*len(TAAccess))})
+                    """, (form["CSYID"], *TAAccess))
+                    for (taEmail,) in cursor.fetchall():
+                        cursor.execute("INSERT IGNORE INTO taexamaccess (LID, Email) VALUES (%s, %s)", (LID, taEmail))
+            else:
+                # A TA creating an exam keeps access to it
+                cursor.execute("INSERT IGNORE INTO taexamaccess (LID, Email) VALUES (%s, %s)", (LID, Email))
+            conn.commit()
+
 
         # check path
         AddDirec = os.path.join(UPLOAD_FOLDER, form["CSYID"], LID)
         if not os.path.exists(AddDirec):
             os.makedirs(AddDirec)
 
-        for i in Additional_files:
+        for i, hide in Additional_files:
             AddPath = os.path.join(AddDirec, i.filename)
             i.save(AddPath)
             AddFileForQinfo.append(AddPath)
-            addFile = "INSERT INTO addfile (LID, Path, CSYID) VALUES (%s, %s, %s)"
-            cursor.execute(addFile, (LID, AddPath, form["CSYID"]))
+            addFile = "INSERT INTO addfile (LID, Path, CSYID, Hide) VALUES (%s, %s, %s, %s)"
+            cursor.execute(addFile, (LID, AddPath, form["CSYID"], hide))
             conn.commit()
 
         Question = json.loads(request.form.get('Question'))

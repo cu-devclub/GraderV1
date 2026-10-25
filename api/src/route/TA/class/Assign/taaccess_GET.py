@@ -31,14 +31,17 @@ def main():
         cursor.execute(query, (CSYID,))
         tas = cursor.fetchall()
 
-        query = """
-            SELECT Email
-            FROM taexamaccess
-            WHERE LID = %s
-        """
-        cursor.execute(query, (LID,))
-        access = cursor.fetchall()
-        access_emails = [a[0] for a in access]
+        # No LID yet when the lab is being created, nobody has access
+        access_emails = []
+        if LID:
+            query = """
+                SELECT Email
+                FROM taexamaccess
+                WHERE LID = %s
+            """
+            cursor.execute(query, (LID,))
+            access = cursor.fetchall()
+            access_emails = [a[0] for a in access]
 
         data = []
         for ta in tas:
