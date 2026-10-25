@@ -25,6 +25,52 @@ def __filter_escapes(string):
     return string
 
 
+# Rewrite additional file names to their real paths, e.g. 'sample.fasta' or './sample.fasta' -> '<path>/sample.fasta'
+# Longer names go first and the name must stand alone, so 'a.txt' never touches 'data.txt' or an already rewritten path
+def __rewrite_addfile(code, addfile=[]):
+    for afpath in sorted(addfile, key=lambda p: len(os.path.split(p)[-1]), reverse=True):
+        afname = os.path.split(afpath)[-1]
+        pattern = r"(?<![\w\-./\\])(?:\.[/\\])?" + re.escape(afname) + r"(?![\w\-]|\.\w)"
+        # forward slashes so a Windows path never turns into escape sequences inside a string literal
+        code = re.sub(pattern, lambda m: afpath.replace("\\", "/"), code)
+    return code
+
+
+# Only reading files is allowed, anything that can write, truncate or delete files is blocked
+__WRITE_CALLS = (".write(", ".writelines(", "write_text(", "write_bytes(", "os.remove(", "os.unlink(", "os.rename(", "os.replace(", "os.rmdir(", "os.removedirs(", "os.truncate(", "os.open(", "shutil.", ".unlink(", ".rmdir(", ".touch(")
+__WRITE_OS_NAMES = ("remove", "unlink", "rename", "replace", "rmdir", "removedirs", "truncate", "open")
+
+def __has_write(code):
+    if any(w in code for w in __WRITE_CALLS):
+        return True
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return False
+    for node in ast.walk(tree):
+        # import shutil / from shutil import rmtree / from os import remove
+        if isinstance(node, ast.Import) and any(a.name.split(".")[0] == "shutil" for a in node.names):
+            return True
+        if isinstance(node, ast.ImportFrom) and node.module:
+            if node.module.split(".")[0] == "shutil":
+                return True
+            if node.module == "os" and any(a.name in __WRITE_OS_NAMES or a.name == "*" for a in node.names):
+                return True
+        if not isinstance(node, ast.Call):
+            continue
+        func = node.func
+        name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else None
+        if name != "open":
+            continue
+        # open(path) defaults to read, any explicit mode must be a plain read mode
+        mode = node.args[1] if len(node.args) > 1 else next((k.value for k in node.keywords if k.arg == "mode"), None)
+        if mode is None:
+            continue
+        if not (isinstance(mode, ast.Constant) and isinstance(mode.value, str)) or any(c in mode.value for c in "wax+"):
+            return True
+    return False
+
+
 
 # Validation by nbgrader
 def __validate(filename):
@@ -81,10 +127,7 @@ def QinfoGenerate(Question, addfile=[]) -> dict:
                 continue
 
             # replacing file path
-            if(len(addfile) != 0):
-                for afpath in addfile:
-                    afname = os.path.split(afpath)[-1]
-                    temporaryTestcase = temporaryTestcase.replace(afname, afpath)
+            temporaryTestcase = __rewrite_addfile(temporaryTestcase, addfile)
 
             tempararyTSCL = temporaryTestcase.split(temporarySplitWord)
             if len(tempararyTSCL) != 0:
@@ -212,10 +255,10 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
             inserted_pass = codeCell[i]["source"]
             TempSol = temporarySplitWord.join(inserted_pass)
 
-            if(protectWrite):
-                if ".write(" in TempSol or "os.remove(" in TempSol: return True, "This file contain file write method it may broke the additional assignment files"
-            
             cell_code = "".join(TempSol.split(temporarySplitWord))
+
+            if(protectWrite):
+                if __has_write(cell_code): return True, "This file contain file write method it may broke the additional assignment files"
             try:
                 compile(cell_code, '<string>', 'exec')
                 solution.append(cell_code)
@@ -255,7 +298,7 @@ def grade(Question, submit, addfile=[], validate=True, timeout=20, check_keyword
 
 
 
-    solutionSumed = "\n".join(__fix_syntax_errors(solution, submit))
+    solutionSumed = __rewrite_addfile("\n".join(__fix_syntax_errors(solution, submit)), addfile)
     testcaseSumList = sum(Qinfo['Testcase'],[])
 
     for tcIndex in range(len(testcaseSumList)):
