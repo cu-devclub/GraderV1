@@ -167,7 +167,7 @@ def main():
             if editBefore:
                 filename = f'{Email.split("@")[0]}-L{resultLab[0]}-Q{int(prefilename[1]) + 1}.ipynb'
             else:
-                filename = f'Release_{str(resultLab[1]).replace(".", "-")}_L{resultLab[0]}_Q{int(prefilename[1]) + 1}.ipynb'
+                filename = f'{str(resultLab[1]).replace(".", "-")}_L{resultLab[0]}_Q{int(prefilename[1]) + 1}.ipynb'
         if FRL[1] == 1:
             filename = f'Source_{str(resultLab[1]).replace(".", "-")}_L{resultLab[0]}_Q{int(prefilename[1]) + 1}.ipynb'
 
