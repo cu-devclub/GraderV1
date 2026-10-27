@@ -20,6 +20,7 @@ function Sentin() {
   const [loading, setLoading] = useState(true);
 
   const isExamFromServ = sessionStorage.getItem("isExam") === 'true';
+  const hasAccess = sessionStorage.getItem("hasAccess") !== 'false';
 
   const [Scores, setScores] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -246,9 +247,11 @@ function Sentin() {
         <div style={{ color: '#e25595', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: 'bold' }} onClick={() => navigate("/AssignList")}>
           <ArrowLeftCircle size={18} /> <span style={{ textDecoration: 'underline', textUnderlineOffset: '3px' }}>Back to assignment</span>
         </div>
-        <button type="button" onClick={() => {downall()}} style={{ padding: '6px 20px', backgroundColor: 'white', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-          <Download size={16} /> Download all submission
-        </button>
+        {hasAccess && (
+          <button type="button" onClick={() => {downall()}} style={{ padding: '6px 20px', backgroundColor: 'white', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Download size={16} /> Download all submission
+          </button>
+        )}
       </div>
       <div className="responsive-container" style={{ flexGrow: 1, display: 'flex', flexDirection: 'column', marginLeft: '10vw', marginRight: '10vw', marginBottom: '2vh' }}>
         <div style={{ flexShrink: 0, backgroundColor: 'white', position: 'sticky', top: '56px', zIndex: 100 }}>
@@ -329,7 +332,7 @@ function Sentin() {
                                           {smt["Score"]}/{smt["MaxScore"]}
                                         </div>
                                         <div className='col-1'>
-                                          {smt["SID"] > -1 ? <button type="button" className="btn btn-outline-dark" onClick={() => {loadSub(smt["SID"])}}><Download /></button>: ""}
+                                          {(smt["SID"] > -1 && hasAccess) ? <button type="button" className="btn btn-outline-dark" onClick={() => {loadSub(smt["SID"])}}><Download /></button>: ""}
                                         </div>
                                       </div>
                                     </tr>

@@ -70,6 +70,9 @@ def update_database(conn, cursor, questions, qnum, source_files, release_files, 
                 WHERE QID = %s AND LID = %s
             ''', (max_score, source_path, release_path, current_qid, lid))
 
+            if isSourceUpdate or str(i) in release_files:
+                cursor.execute('UPDATE question SET LastEdit = %s WHERE QID = %s AND LID = %s', (datetime.now(gmt_timezone), current_qid, lid))
+
             if isSourceUpdate:
                 regrade(conn, cursor, True, current_qid, lid)
                 # select_query = "SELECT Path FROM addfile WHERE LID = %s"
@@ -183,10 +186,20 @@ def main():
 
     form = request.form
 
+    from function.hasAccess import hasAccess
+    Role = get_jwt_identity().get('role', '1')
+
     if not isCET(conn, cursor, Email, form["CSYID"]):
-        jsonify({
+        return jsonify({
             'success': False,
             'msg': "You don't have permission.",
+            'data': {}
+        }), 200
+
+    if not hasAccess(conn, cursor, Email, Role, form["LID"]):
+        return jsonify({
+            'success': False,
+            'msg': 'You do not have access to this exam.',
             'data': {}
         }), 200
 

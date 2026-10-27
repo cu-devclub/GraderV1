@@ -62,10 +62,11 @@ def main():
             LEFT JOIN (
                 SELECT LID, MAX(Timestamp) AS LatestTimestamp
                 FROM submitted
+                WHERE UID = %s
                 GROUP BY LID
             ) s ON l.LID = s.LID
             WHERE l.LID = %s
-        """, (LID,))
+        """, (Email.split('@')[0], LID,))
         lab_info_row = cur.fetchone()
 
         lock = isLock(g.db, cur, LID)

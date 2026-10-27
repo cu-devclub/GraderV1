@@ -170,3 +170,12 @@ CREATE TABLE IF NOT EXISTS `user` (
   `Role` varchar(1) COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`Email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `taexamaccess` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `LID` int NOT NULL,
+  `Email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNQ_TEA` (`LID`,`Email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+

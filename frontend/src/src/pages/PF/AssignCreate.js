@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Shimmer from '../../components/Shimmer';
 import PinInput from '../../components/pin';
-import { ArrowLeftCircle, X, Paperclip, Plus } from 'react-bootstrap-icons';
+import { ArrowLeftCircle, X, Paperclip, Plus, ArrowsFullscreen, FileEarmark, Eye, EyeSlash } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -40,6 +40,14 @@ function AssignCreate() {
   const [Selected, setSelected] = useState([]);
 
   const [examPin, setExamPin] = useState("");
+
+  // TA access (exam mode), saved together with the lab on create
+  const [showTAModal, setShowTAModal] = useState(false);
+  const [taList, setTaList] = useState([]);
+  const [taAccess, setTaAccess] = useState([]);
+
+  // Additional files, each with its visibility to students
+  const [addFiles, setAddFiles] = useState([]);
 
   // Tab state
   const [currentTab, setCurrentTab] = useState('Detail');
@@ -121,6 +129,44 @@ function AssignCreate() {
       setSelected([...Selected, e]);
     }
   };
+
+  const fetchTAList = async () => {
+    try {
+      const response = await fetch(`${host}/TA/class/Assign/taaccess?CSYID=${classId}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+        }
+      });
+      const data = await response.json();
+      if(data.success){
+        setTaList(data.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const handleToggleTA = (email) => {
+    setTaAccess(taAccess.includes(email) ? taAccess.filter((e) => e !== email) : [...taAccess, email]);
+  }
+
+  const handleAddFiles = (e) => {
+    const picked = Array.from(e.target.files);
+    // Same name replaces the earlier pick, the server saves files by name
+    setAddFiles([...addFiles.filter((f) => !picked.some((p) => p.name === f.file.name)), ...picked.map((file) => ({ file, visible: true }))]);
+    e.target.value = '';
+  }
+
+  const handleToggleAddFile = (name) => {
+    setAddFiles(addFiles.map((f) => f.file.name === name ? { ...f, visible: !f.visible } : f));
+  }
+
+  const handleRemoveAddFile = (name) => {
+    setAddFiles(addFiles.filter((f) => f.file.name !== name));
+  }
 
   const handlePublishDateChange = (e) => {
     setPublishDate(e.target.value)
@@ -292,12 +338,9 @@ function AssignCreate() {
       }).then(async ok => {
         if(ok.isConfirmed){
           const formData = new FormData()
-          const inputlink = document.getElementById('inputlink');
-          if (inputlink && inputlink.files) {
-            const addFiles = inputlink.files;
-            for(let i=0;i<addFiles.length;i++){
-              formData.append(`Add${i}`, addFiles[i])
-            }
+          for(let i=0;i<addFiles.length;i++){
+            formData.append(`Add${i}`, addFiles[i].file)
+            formData.append(`HideAdd${i}`, !addFiles[i].visible)
           }
 
           for(let i = 0;i < Question.length;i++){
@@ -316,6 +359,7 @@ function AssignCreate() {
           formData.append('ShowOnLock', showLock);
           formData.append('isExam', isExam);
           formData.append('ExamPin', examPin);
+          formData.append('TAAccess', JSON.stringify(taAccess));
 
           formData.append('CSYID', classId);
 
@@ -362,14 +406,75 @@ function AssignCreate() {
 
   const handleShowPin = () => {
     withReactContent(Swal).fire({
-      title: "Current Exam Pin",
-      html: `<div style="font-size: 3rem; font-weight: bold; letter-spacing: 10px; color: #2b3a67;">${examPin}</div>`,
-      confirmButtonText: "Close"
+      title: <div style={{ color: '#475569', fontWeight: 'bold', fontSize: '2.5rem', marginBottom: '1rem' }}>Exam pin</div>,
+      html: `
+        <div style="border: 2px solid #cbd5e1; border-radius: 20px; padding: 4rem; display: flex; justify-content: center; align-items: center; background-color: #f8fafc; height: 50vh;">
+          <span style="font-size: 12rem; font-weight: bold; color: #334155; letter-spacing: 16px;">${examPin}</span>
+        </div>
+      `,
+      showCloseButton: true,
+      showConfirmButton: false,
+      width: '80vw',
     });
   };
 
   return (
     <div>
+      {showTAModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '2rem', width: '800px', maxWidth: '95%', maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.25rem', fontWeight: 'bold', color: '#334155' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-person-gear" viewBox="0 0 16 16">
+                  <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm.256 7a4.474 4.474 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10c.26 0 .507.009.74.025.226-.341.496-.65.804-.918C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4s1 1 1 1h5.256zm3.63-4.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382l.045-.148zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
+                </svg>
+                Manage TA Access
+              </div>
+              <button type="button" onClick={() => setShowTAModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                <X size={28} />
+              </button>
+            </div>
+            <div>
+              {taList.map((ta, index) => {
+                const access = taAccess.includes(ta.Email);
+                return (
+                  <div key={ta.Email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: index < taList.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
+                    <div style={{ display: 'flex', gap: '2rem', flex: 1 }}>
+                      <span style={{ color: '#f472b6', width: '100px' }}>{ta.UID}</span>
+                      <span style={{ color: '#334155' }}>{ta.Name}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleTA(ta.Email)}
+                      style={{
+                        padding: '6px 16px',
+                        borderRadius: '6px',
+                        border: '1px solid',
+                        borderColor: access ? '#93c5fd' : '#cbd5e1',
+                        backgroundColor: access ? '#eff6ff' : '#f1f5f9',
+                        color: access ? '#3b82f6' : '#94a3b8',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.9rem',
+                        width: '150px',
+                        whiteSpace: 'nowrap',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {access ? <Eye size={14} /> : <EyeSlash size={14} />} {access ? 'Full access' : 'No access'}
+                    </button>
+                  </div>
+                );
+              })}
+              {taList.length === 0 && (
+                <div style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem 0' }}>No TAs found for this class.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <style>
         {`
         .upload-dropzone {
@@ -572,13 +677,24 @@ function AssignCreate() {
                     </div>
                     <button 
                       type="button" 
-                      className="btn btn-outline-secondary" 
+                      className="btn btn-outline-dark" 
                       onClick={handleShowPin} 
                       disabled={!isExam}
-                      style={{ marginTop: '1rem', width: '100%' }}
+                      style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                     >
-                      Show pin to student
+                      <ArrowsFullscreen size={16} /> Show pin fullscreen
                     </button>
+                    {Cookies.get("role") === "2" && (
+                      <button
+                        type="button"
+                        className="btn btn-outline-dark"
+                        onClick={() => { setShowTAModal(true); fetchTAList(); }}
+                        disabled={!isExam}
+                        style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', color: '#2b3a67', borderColor: '#2b3a67', borderRadius: '30px', fontWeight: 'bold' }}
+                      >
+                        Manage TA access
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -592,20 +708,28 @@ function AssignCreate() {
           <div style={{ marginTop: '2rem' }}>
             <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#475569', marginBottom: '16px' }}>Additional files</div>
             <div className="upload-dropzone" style={{ position: 'relative', padding: '40px', borderRadius: '8px', textAlign: 'center', height: '250px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-              <input type="file" multiple id="inputlink" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} onChange={(e) => { 
-                if (e.target.files.length > 0) { 
-                  const names = Array.from(e.target.files).map(f => f.name).join(', ');
-                  e.target.nextSibling.nextSibling.innerText = names; 
-                  e.target.nextSibling.style.color = '#e25595'; 
-                  e.target.parentElement.classList.add('has-file'); 
-                } else { 
-                  e.target.nextSibling.nextSibling.innerText = 'Drag & drop or click to upload'; 
-                  e.target.nextSibling.style.color = '#94a3b8'; 
-                  e.target.parentElement.classList.remove('has-file'); 
-                } 
-              }} />
+              <input type="file" multiple id="inputlink" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} onChange={handleAddFiles} />
               <Paperclip size={32} style={{ color: '#94a3b8' }} />
               <div style={{ color: '#94a3b8', fontSize: '1rem', marginTop: '12px' }}>Drag & drop or click to upload</div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
+              {addFiles.map(({ file, visible }) => (
+                <div key={`AD${file.name}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '24px', padding: '12px 24px', backgroundColor: 'white' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexGrow: 1, overflow: 'hidden' }}>
+                    <FileEarmark size={18} style={{ color: '#94a3b8' }} />
+                    <span style={{ color: '#334155', fontWeight: '500', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{file.name}</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button type="button" title={visible ? 'Visible to students' : 'Hidden from students'} onClick={() => handleToggleAddFile(file.name)} style={{ background: 'none', border: 'none', color: visible ? '#3b82f6' : '#94a3b8', cursor: 'pointer', padding: 0 }}>
+                      {visible ? <Eye size={20} /> : <EyeSlash size={20} />}
+                    </button>
+                    <button type="button" onClick={() => handleRemoveAddFile(file.name)} style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: 0 }}>
+                      <X size={24} />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
             </div>
           </div>

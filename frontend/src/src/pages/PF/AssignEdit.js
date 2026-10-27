@@ -7,7 +7,7 @@ import PinInput from '../../components/pin';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Shimmer from '../../components/Shimmer';
-import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash, ArrowLeftCircle, X, Paperclip } from 'react-bootstrap-icons';
+import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash, ArrowLeftCircle, X, Paperclip, ArrowsFullscreen } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -23,6 +23,9 @@ function AssignEdit() {
   const [showModal, setShowModal] = useState(false)
   const [modalEdit, setModalEdit] = useState(false)
   const [curadf, setcuradf] = useState(false)
+  
+  const [showTAModal, setShowTAModal] = useState(false);
+  const [taList, setTaList] = useState([]);
 
   // User Data
   const [ClassInfo, setClassInfo] = useState({});
@@ -38,6 +41,7 @@ function AssignEdit() {
   const [showLock, setShowLock] = useState(false)
   const [isExam, setIsExam] = useState(false)
   const [isExamFromServ, setIsExamFromServ] = useState(false)
+  const [hasAccess, setHasAccess] = useState(true);
 
   // Question Sys
   const [totalQNum, setTotalQNum] = useState(1);
@@ -75,6 +79,7 @@ function AssignEdit() {
         setIsExam(data.data.isExam)
         setIsExamFromServ(data.data.isExam)
         setExamPin(data.data.ExamPin)
+        setHasAccess(data.data.hasAccess !== false)
 
         setIsGroup(data.data.IsGroup)
         setSelectList(data.data.SelectList)
@@ -115,6 +120,7 @@ function AssignEdit() {
           setIsExam(data.data.isExam)
           setIsExamFromServ(data.data.isExam)
           setExamPin(data.data.ExamPin)
+          setHasAccess(data.data.hasAccess !== false)
   
           setIsGroup(data.data.IsGroup)
           setSelectList(data.data.SelectList)
@@ -156,7 +162,49 @@ function AssignEdit() {
 
   useEffect(() => {
     sessionStorage.setItem("isExam", isExamFromServ)
-  }, [isExamFromServ])
+    sessionStorage.setItem("hasAccess", hasAccess)
+  }, [isExamFromServ, hasAccess])
+
+  const fetchTAList = async () => {
+    try {
+      const response = await fetch(`${host}/TA/class/Assign/taaccess?LID=${LID}&CSYID=${classId}`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+        }
+      });
+      const data = await response.json();
+      if(data.success){
+        setTaList(data.data);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  const handleToggleTA = async (email, currentAccess) => {
+    try {
+      const response = await fetch(`${host}/TA/class/Assign/taaccess`, {
+        method: 'POST',
+        credentials: "include",
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+        },
+        body: JSON.stringify({ LID: LID, CSYID: classId, Email: email, Access: !currentAccess }),
+      });
+      const data = await response.json();
+      if(data.success){
+        fetchTAList();
+      } else {
+        toast.error(data.msg);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   const handlePublishDateChange = (e) => {
     setPublishDate(e.target.value)
@@ -623,18 +671,15 @@ function AssignEdit() {
 
   const handleShowPin = async () => {
     withReactContent(Swal).fire({
-      title: `Examination pin`,
-      html: `<div style="display:flex;justify-content:center;align-items:center;height:40vh;">
-           <h1 style="font-size:8rem;">${examPin}</h1>
-         </div>`,
-      backdrop: true,
-      allowOutsideClick: false,
-      allowEscapeKey: true,
-      showConfirmButton: true,
+      title: <div style={{ color: '#475569', fontWeight: 'bold', fontSize: '2.5rem', marginBottom: '1rem' }}>Exam pin</div>,
+      html: `
+        <div style="border: 2px solid #cbd5e1; border-radius: 20px; padding: 4rem; display: flex; justify-content: center; align-items: center; background-color: #f8fafc; height: 50vh;">
+          <span style="font-size: 12rem; font-weight: bold; color: #334155; letter-spacing: 16px;">${examPin}</span>
+        </div>
+      `,
+      showCloseButton: true,
+      showConfirmButton: false,
       width: '80vw',
-      customClass: {
-      popup: 'swal2-cover-page'
-      }
     })
   }
 
@@ -802,6 +847,57 @@ function AssignEdit() {
 
   return (
     <div>
+      {showTAModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '2rem', width: '800px', maxWidth: '95%', maxHeight: '80vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '1.25rem', fontWeight: 'bold', color: '#334155' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-person-gear" viewBox="0 0 16 16">
+                  <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4zm.256 7a4.474 4.474 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10c.26 0 .507.009.74.025.226-.341.496-.65.804-.918C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4s1 1 1 1h5.256zm3.63-4.54c.18-.613 1.048-.613 1.229 0l.043.148a.64.64 0 0 0 .921.382l.136-.074c.561-.306 1.175.308.87.869l-.075.136a.64.64 0 0 0 .382.92l.149.045c.612.18.612 1.048 0 1.229l-.15.043a.64.64 0 0 0-.38.921l.074.136c.305.561-.309 1.175-.87.87l-.136-.075a.64.64 0 0 0-.92.382l-.045.149c-.18.612-1.048.612-1.229 0l-.043-.15a.64.64 0 0 0-.921-.38l-.136.074c-.561.305-1.175-.309-.87-.87l.075-.136a.64.64 0 0 0-.382-.92l-.148-.045c-.613-.18-.613-1.048 0-1.229l.148-.043a.64.64 0 0 0 .382-.921l-.074-.136c-.306-.561.308-1.175.869-.87l.136.075a.64.64 0 0 0 .92-.382l.045-.148zM14 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0z"/>
+                </svg>
+                Manage TA Access
+              </div>
+              <button type="button" onClick={() => setShowTAModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8' }}>
+                <X size={28} />
+              </button>
+            </div>
+            <div>
+              {taList.map((ta, index) => (
+                <div key={ta.Email} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 0', borderBottom: index < taList.length - 1 ? '1px solid #e2e8f0' : 'none' }}>
+                  <div style={{ display: 'flex', gap: '2rem', flex: 1 }}>
+                    <span style={{ color: '#f472b6', width: '100px' }}>{ta.UID}</span>
+                    <span style={{ color: '#334155' }}>{ta.Name}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleToggleTA(ta.Email, ta.Access)}
+                    style={{ 
+                      padding: '6px 16px', 
+                      borderRadius: '6px', 
+                      border: '1px solid',
+                      borderColor: ta.Access ? '#93c5fd' : '#cbd5e1',
+                      backgroundColor: ta.Access ? '#eff6ff' : '#f1f5f9',
+                      color: ta.Access ? '#3b82f6' : '#94a3b8',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.9rem',
+                      width: '150px',
+                      whiteSpace: 'nowrap',
+                      justifyContent: 'center'
+                    }}
+                  >
+                    {ta.Access ? <Eye size={14} /> : <EyeSlash size={14} />} {ta.Access ? 'Full access' : 'No access'}
+                  </button>
+                </div>
+              ))}
+              {taList.length === 0 && (
+                <div style={{ textAlign: 'center', color: '#94a3b8', padding: '2rem 0' }}>No TAs found for this class.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
       <style>
         {`
         .upload-dropzone {
@@ -1018,13 +1114,24 @@ function AssignEdit() {
                     </div>
                     <button 
                       type="button" 
-                      className="btn btn-outline-secondary" 
+                      className="btn btn-outline-dark" 
                       onClick={handleShowPin} 
                       disabled={!isExam}
-                      style={{ marginTop: '1rem', width: '100%' }}
+                      style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                     >
-                      Show pin to student
+                      <ArrowsFullscreen size={16} /> Show pin fullscreen
                     </button>
+                    {Cookies.get("role") === "2" && (
+                      <button 
+                        type="button" 
+                        className="btn btn-outline-dark" 
+                        onClick={() => { setShowTAModal(true); fetchTAList(); }} 
+                        disabled={!isExam}
+                        style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', color: '#2b3a67', borderColor: '#2b3a67', borderRadius: '30px', fontWeight: 'bold' }}
+                      >
+                        Manage TA access
+                      </button>
+                    )}
                   </div>
                 </div>
               )}
@@ -1034,7 +1141,15 @@ function AssignEdit() {
         </div>
         </div>
         
-        <div style={{ display: currentTab === 'Files' ? 'block' : 'none' }}>
+        <div style={{ display: currentTab === 'Files' ? 'block' : 'none', position: 'relative' }}>
+          {!hasAccess && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backdropFilter: 'blur(4px)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.5)' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className="bi bi-lock" viewBox="0 0 16 16" style={{ marginBottom: '1rem' }}>
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
+              </svg>
+              <div style={{ fontWeight: 'bold' }}>You don't have access to this lab's questions and files.</div>
+            </div>
+          )}
           <div style={{ marginTop: '2rem' }}>
             <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#475569', marginBottom: '16px' }}>Additional files</div>
             <div className="upload-dropzone" style={{ position: 'relative', padding: '40px', borderRadius: '8px', textAlign: 'center', height: '250px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -1081,7 +1196,15 @@ function AssignEdit() {
             </div>
           </div>
 
-        <div style={{ display: currentTab === 'Questions' ? 'block' : 'none' }}>
+        <div style={{ display: currentTab === 'Questions' ? 'block' : 'none', position: 'relative' }}>
+          {!hasAccess && (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backdropFilter: 'blur(4px)', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.5)' }}>
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" className="bi bi-lock" viewBox="0 0 16 16" style={{ marginBottom: '1rem' }}>
+                <path d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM5 8h6a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/>
+              </svg>
+              <div style={{ fontWeight: 'bold' }}>You don't have access to this lab's questions and files.</div>
+            </div>
+          )}
           <div style={{ marginTop: '2rem' }}>
             <div style={{ textAlign: 'right', marginBottom: '16px', color: '#475569', fontSize: '1rem' }}>
               <strong>{Question.length}</strong> Questions • <strong>{Question.reduce((sum, q) => sum + (Number(q.score) || 0), 0)}</strong> Total points

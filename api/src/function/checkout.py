@@ -1,3 +1,5 @@
+from function.isOtherIPCheckedOut import isOtherIPCheckedOut
+
 def checkout(conn, cursor, CSYID, UID, LID) -> str:
     try:
         query = """ 
@@ -29,6 +31,10 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
         public_ip = ''
         if data is not None:
             public_ip = data[1]
+            # only one IP per UID is allowed in exam mode
+            if isOtherIPCheckedOut(cursor, UID, LID, public_ip):
+                return "Student is already checked in from another device. Check the student out first."
+
             query = "DELETE FROM ticket WHERE ID = %s;"
             cursor.execute(query, (data[0]))
             conn.commit()

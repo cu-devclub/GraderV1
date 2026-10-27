@@ -48,11 +48,25 @@ def checkPermQDown(QID, Email, level, cur):
         cur.execute(query_classeditor, (Email, CSYID))
         result_classeditor = cur.fetchone()
         
-        return result_classeditor is not None
+        if result_classeditor is not None:
+            query_role = "SELECT Role FROM user WHERE Email = %s"
+            cur.execute(query_role, (Email,))
+            role_result = cur.fetchone()
+            if role_result and str(role_result[0]) == '1':
+                query_exam = "SELECT Exam FROM lab WHERE LID = %s"
+                cur.execute(query_exam, (LID,))
+                exam_res = cur.fetchone()
+                if exam_res and int(exam_res[0]) == 1:
+                    query_acc = "SELECT 1 FROM taexamaccess WHERE LID = %s AND Email = %s"
+                    cur.execute(query_acc, (LID, Email))
+                    if not cur.fetchone():
+                        return False
+            return True
+        return False
         
     elif level == 1:
         # Retrieve CSYID from question table
-        query_question = "SELECT CSYID FROM question WHERE QID = %s"
+        query_question = "SELECT CSYID, LID FROM question WHERE QID = %s"
         cur.execute(query_question, (QID,))
         result_question = cur.fetchone()
         
@@ -60,10 +74,26 @@ def checkPermQDown(QID, Email, level, cur):
             return False
         
         CSYID = result_question[0]
+        LID = result_question[1]
         # Check if Email is in classeditor with the same CSYID
         query_classeditor = "SELECT 1 FROM classeditor WHERE Email = %s AND CSYID = %s"
         cur.execute(query_classeditor, (Email, CSYID))
         result_classeditor = cur.fetchone()
-        return result_classeditor is not None
+        
+        if result_classeditor is not None:
+            query_role = "SELECT Role FROM user WHERE Email = %s"
+            cur.execute(query_role, (Email,))
+            role_result = cur.fetchone()
+            if role_result and str(role_result[0]) == '1':
+                query_exam = "SELECT Exam FROM lab WHERE LID = %s"
+                cur.execute(query_exam, (LID,))
+                exam_res = cur.fetchone()
+                if exam_res and int(exam_res[0]) == 1:
+                    query_acc = "SELECT 1 FROM taexamaccess WHERE LID = %s AND Email = %s"
+                    cur.execute(query_acc, (LID, Email))
+                    if not cur.fetchone():
+                        return False
+            return True
+        return False
     
     return False

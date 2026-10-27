@@ -18,10 +18,21 @@ def main():
 
     CSYID = form.get("CSYID")
 
+    from function.hasAccess import hasAccess
+    Role = get_jwt_identity().get('role', '1')
+
     if not isCET(conn, cursor, Email, CSYID):
         return jsonify({
             'success': False,
             'msg': "You don't have permission.",
+            'data': {}
+        }), 200
+
+    LID = form.get('LID')
+    if not hasAccess(conn, cursor, Email, Role, LID):
+        return jsonify({
+            'success': False,
+            'msg': 'You do not have access to this exam.',
             'data': {}
         }), 200
 
