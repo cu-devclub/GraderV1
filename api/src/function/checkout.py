@@ -3,7 +3,9 @@ from datetime import datetime
 
 from function.isOtherIPCheckedOut import isOtherIPCheckedOut
 
-def checkout(conn, cursor, CSYID, UID, LID) -> str:
+OTHER_DEVICE_MSG = "Student is already checked in from another device. Check the student out first."
+
+def checkout(conn, cursor, CSYID, UID, LID, switch_device=False) -> str:
     try:
         query = """ 
             SELECT
@@ -36,9 +38,14 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
             return "No check-in ticket found. The student must request check-in from their own device."
 
         public_ip = data[1]
+        now = datetime.now(pytz.timezone('Asia/Bangkok'))
         # only one IP per UID is allowed in exam mode
         if isOtherIPCheckedOut(cursor, UID, LID, public_ip):
-            return "Student is already checked in from another device. Check the student out first."
+            if not switch_device:
+                return OTHER_DEVICE_MSG
+            # switching device: check out the old device (soft delete) before checking in this one
+            query = "UPDATE `checkout` SET `CheckoutTime` = %s WHERE UID = %s AND LID = %s AND CSYID = %s AND `CheckoutTime` IS NULL;"
+            cursor.execute(query, (now, UID, LID, CSYID))
 
         query = "DELETE FROM ticket WHERE ID = %s;"
         cursor.execute(query, (data[0]))
@@ -49,7 +56,6 @@ def checkout(conn, cursor, CSYID, UID, LID) -> str:
         cursor.execute(query)
         conn.commit()
 
-        now = datetime.now(pytz.timezone('Asia/Bangkok'))
         query = "INSERT INTO `checkout` (`UID`, `LID`, `CSYID`, ip, `Timestamp`) VALUES (%s, %s, %s, %s, %s);"
         cursor.execute(query, (UID, LID, CSYID, public_ip, now))
         conn.commit()

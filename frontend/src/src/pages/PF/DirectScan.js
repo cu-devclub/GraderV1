@@ -65,7 +65,7 @@ function DSC(){
             }
         }
 
-        const rqchkio = async (data, CSYID) => {
+        const rqchkio = async (data, CSYID, switchDevice = false) => {
             try{
                 const response = await fetch(`${host}/TA/class/Assign/Exam/check${data.Type === 0 ? "out":"in"}`, {
                     method: 'POST',
@@ -75,7 +75,7 @@ function DSC(){
                         "Access-Control-Allow-Origin": "*",
                         "X-CSRF-TOKEN": Cookies.get("csrf_token")
                     },
-                    body: JSON.stringify({ LID: data.LID, UID: data.UID, CSYID: CSYID })
+                    body: JSON.stringify({ LID: data.LID, UID: data.UID, CSYID: CSYID, SwitchDevice: switchDevice })
                 })
                 const Data = await response.json()
                 if (Data.success){
@@ -84,6 +84,22 @@ function DSC(){
                         icon: "success"
                     }).then(async ok => {
                         if(ok.isConfirmed || ok.dismiss){
+                            navigate("/Scan")
+                        }
+                    })
+                }else if (Data.code === "OTHER_DEVICE" && !switchDevice){
+                    withReactContent(Swal).fire({
+                        title: Data.msg,
+                        text: "Switching will check out the old device and check in this one.",
+                        icon: Data.data,
+                        showDenyButton: true,
+                        confirmButtonText: "OK",
+                        denyButtonText: "Switch to this device",
+                        denyButtonColor: "#e25595",
+                    }).then(res => {
+                        if(res.isDenied){
+                            rqchkio(data, CSYID, true)
+                        }else{
                             navigate("/Scan")
                         }
                     })
