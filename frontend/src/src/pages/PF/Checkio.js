@@ -268,6 +268,7 @@ function Checkio() {
                   <th scope="col">Name</th>
                   <th scope="col" className="col-2">IP</th>
                   <th scope="col" className="col-2">Check-in Time</th>
+                  <th scope="col" className="col-2">Check-out Time</th>
                   <th scope="col" className="col-1 text-center">Status</th>
                   <th scope="col" className="col-1 text-center">Edit</th>
                 </tr>
@@ -283,6 +284,7 @@ function Checkio() {
                         <td>{element["Name"]}</td>
                         <td>{element["IP"] || "-"}</td>
                         <td>{element["CheckinTime"] || "-"}</td>
+                        <td>{element["CheckoutTime"] || "-"}</td>
                         {/* <td className='text-center'>{element["checkedOut"] === 1 ? <a style={{color: "rgb(137, 32, 32)"}}><PersonSlash/></a> : <a style={{color: "rgb(61, 146, 35)"}}><PersonCheck/></a>}</td> */}
                         <td className="text-center">
                             {element.checkedOut === 1 ? (
