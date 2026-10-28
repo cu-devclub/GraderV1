@@ -138,8 +138,8 @@ def main():
 
     # check if pin correct
     if Pin == exam_pin:
-        query = "INSERT INTO `checkout` (`UID`, `LID`, `CSYID`, ip) VALUES (%s, %s, %s, %s);"
-        cur.execute(query, (Email.split('@')[0], LID, CSYID, public_ip))
+        query = "INSERT INTO `checkout` (`UID`, `LID`, `CSYID`, ip, `Timestamp`) VALUES (%s, %s, %s, %s, %s);"
+        cur.execute(query, (Email.split('@')[0], LID, CSYID, public_ip, now))
         conn.commit()
         return jsonify({
             'success': True,

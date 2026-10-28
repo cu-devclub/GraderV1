@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Shimmer from '../../components/Shimmer';
 
-import { PersonCheck, PersonSlash, BoxArrowLeft, BoxArrowInRight, ArrowLeftCircle, Search } from 'react-bootstrap-icons';
+import { PersonCheck, PersonSlash, BoxArrowLeft, ArrowLeftCircle, Search } from 'react-bootstrap-icons';
 
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -147,53 +147,6 @@ function Checkio() {
         })
     }
 
-    const checkallin = async () => {
-      withReactContent(Swal).fire({
-        title: `\nConfirm Check-In`,
-        text: "Are you sure you want to check in all students?",
-        icon: "question",
-        showCloseButton: true,
-        showCancelButton: true,
-        focusConfirm: false,
-        confirmButtonText: `Confirm`,
-        confirmButtonColor: "rgb(35, 165, 85)",
-    }).then(async ok => {
-        if(ok.isConfirmed){
-            try{
-                const response = await fetch(`${host}/TA/class/Assign/Exam/checkinall`, {
-                    method: 'POST',
-                    credentials: "include",
-                    headers: {
-                        "Content-type": "application/json; charset=UTF-8",
-                        "Access-Control-Allow-Origin": "*",
-                        "X-CSRF-TOKEN": Cookies.get("csrf_token")
-                    },
-                    body: JSON.stringify({ LID: LID})
-                })
-                const Data = await response.json()
-                if (Data.success){
-                    withReactContent(Swal).fire({
-                        title: "Complete!",
-                        icon: "success"
-                    })
-                    fetchStudent()
-                }else{
-                    withReactContent(Swal).fire({
-                        title: Data.msg,
-                        icon: Data.data
-                    })
-                }
-            }catch (error) {
-                withReactContent(Swal).fire({
-                    title: "Please contact admin!",
-                    text: error,
-                    icon: "error"
-                })
-            }
-        }
-      })
-    }
-
     const checkallout = async () => {
       withReactContent(Swal).fire({
         title: `\nConfirm Check-Out`,
@@ -303,7 +256,6 @@ function Checkio() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '1rem', marginBottom: '1rem', paddingRight: '1.5rem' }}>
             <button type="button" onClick={checkallout} style={{ padding: '6px 20px', backgroundColor: 'white', border: '1px solid #cbd5e1', color: '#475569', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', cursor: 'pointer', fontSize: '0.9rem' }}>Check out all</button>
-            <button type="button" onClick={checkallin} style={{ padding: '6px 20px', backgroundColor: '#e25595', border: 'none', color: 'white', borderRadius: '30px', fontWeight: '600', transition: 'all 0.2s', cursor: 'pointer', fontSize: '0.9rem' }}>Check in all</button>
           </div>
         </div>
         <div style={{ flexGrow: 1, paddingBottom: '10px' }}>
@@ -314,6 +266,8 @@ function Checkio() {
                   <th scope="col" className="col-1">#</th>
                   <th scope="col" className="col-2">Student ID</th>
                   <th scope="col">Name</th>
+                  <th scope="col" className="col-2">IP</th>
+                  <th scope="col" className="col-2">Check-in Time</th>
                   <th scope="col" className="col-1 text-center">Status</th>
                   <th scope="col" className="col-1 text-center">Edit</th>
                 </tr>
@@ -327,6 +281,8 @@ function Checkio() {
                         <th scope="row">{index + 1}</th>
                         <td>{element["UID"]}</td>
                         <td>{element["Name"]}</td>
+                        <td>{element["IP"] || "-"}</td>
+                        <td>{element["CheckinTime"] || "-"}</td>
                         {/* <td className='text-center'>{element["checkedOut"] === 1 ? <a style={{color: "rgb(137, 32, 32)"}}><PersonSlash/></a> : <a style={{color: "rgb(61, 146, 35)"}}><PersonCheck/></a>}</td> */}
                         <td className="text-center">
                             {element.checkedOut === 1 ? (
@@ -347,7 +303,7 @@ function Checkio() {
                                 </button>
                             )}
                         </td>
-                        <td className='text-center'>{element["checkedOut"] === 1 ? <button type="button" class="btn btn-success" onClick={() => {rqchkio({Type: 1, UID: element["UID"], Name: element["Name"]})}}><BoxArrowInRight/></button> : <button type="button" class="btn btn-danger" onClick={() => {rqchkio({Type: 0, UID: element["UID"], Name: element["Name"]})}}><BoxArrowLeft/></button>}</td>
+                        <td className='text-center'>{element["checkedOut"] === 1 ? "-" : <button type="button" class="btn btn-danger" onClick={() => {rqchkio({Type: 0, UID: element["UID"], Name: element["Name"]})}}><BoxArrowLeft/></button>}</td>
                       </tr>
                   ))
                   ) : (
