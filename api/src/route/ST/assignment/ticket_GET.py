@@ -6,6 +6,7 @@ from io import BytesIO
 from function.db import get_db
 from function.GenUUID import generateUUID
 from function.loadconfig import config
+from function.examRule import isRuleAcknowledged
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -36,6 +37,14 @@ def main():
             }), 500
 
         # Type 0 = checkout
+
+        # exam rules must be acknowledged before requesting to enter
+        if Type == 1 and not isRuleAcknowledged(cursor, UID, LID):
+            return jsonify({
+                'success': False,
+                'msg': 'Please acknowledge the exam rules first.',
+                'data': "error"
+            }), 200
 
         query = """ 
             SELECT

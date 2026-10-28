@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { CodeSlash, FileEarmark, Download } from 'react-bootstrap-icons';
 import Shimmer from '../../components/Shimmer';
+import { showExamRuleTyping } from '../../components/examRule';
 // import PinInput from '../../components/pin';
 
 const host = `${process.env.REACT_APP_HOST}`;
@@ -195,6 +196,26 @@ function Lab() {
 
   useEffect(() => {
     if (LabInfo && !LabInfo.Info.Access && LabInfo.Info.Exam && !LabInfo.Info.Lock) {
+      // exam rules come before check-in; once acknowledged this effect runs again and shows check-in
+      if (LabInfo.Info.ExamRule && !LabInfo.Info.RuleAck) {
+        showExamRuleTyping(LabInfo.Info.ExamRule, async (text) => {
+          const response = await fetch(`${host}/ST/assignment/ruleack`, {
+            method: 'POST',
+            credentials: "include",
+            headers: {
+              "Content-type": "application/json; charset=UTF-8",
+              "Access-Control-Allow-Origin": "*",
+              "X-CSRF-TOKEN": Cookies.get("csrf_token")
+            },
+            body: JSON.stringify({ LID: LID, Text: text })
+          });
+          return response.json();
+        }).then(() => {
+          setLabInfo((prev) => ({ ...prev, Info: { ...prev.Info, RuleAck: true } }));
+        });
+        return;
+      }
+
       let isActionTriggered = false;
 
       const submitPin = (pin) => {

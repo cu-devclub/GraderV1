@@ -11,6 +11,7 @@ from cryptography.hazmat.primitives import serialization
 
 from function.isAccess import isAccess
 from function.isOtherIPCheckedOut import isOtherIPCheckedOut
+from function.examRule import isRuleAcknowledged
 from function.loadconfig import config
 from function.db import get_db
 
@@ -91,6 +92,14 @@ def main():
         return jsonify({
             'success': False,
             'msg': 'You do not have access to this lab.',
+            'data': ""
+        }), 200
+
+    # exam rules must be acknowledged before check-in
+    if not isRuleAcknowledged(cur, Email.split('@')[0], LID):
+        return jsonify({
+            'success': False,
+            'msg': 'Please acknowledge the exam rules first.',
             'data': ""
         }), 200
 
