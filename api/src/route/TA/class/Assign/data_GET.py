@@ -57,7 +57,8 @@ def main():
                 END AS LOD,
                 LB.showScoreOnLock,
                 LB.Exam,
-                EP.Pin
+                EP.Pin,
+                LB.ExamRule
             FROM
                 lab LB
                 LEFT JOIN exampin EP ON EP.LID = LB.LID
@@ -152,6 +153,7 @@ def main():
                 "ShowOnLock": bool(int(data[8])),
                 "isExam": bool(int(data[9])),
                 "ExamPin": data[10],
+                "ExamRule": data[11] or "",
                 "IsGroup": isGroup,
                 "Selected": [PreSelectList[int(i)] for i in newD5.strip("[] ").split(",") if i.strip().isdigit() and int(i) in PreSelectList],
                 "SelectList": list(PreSelectList.values()),

@@ -84,6 +84,7 @@ CREATE TABLE IF NOT EXISTS `lab` (
   `CSYID` int NOT NULL,
   `Creator` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `pin` char(6) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `ExamRule` text COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`LID`)
 ) ENGINE=InnoDB AUTO_INCREMENT=440 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -179,5 +180,14 @@ CREATE TABLE IF NOT EXISTS `taexamaccess` (
   `Email` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNQ_TEA` (`LID`,`Email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS `examruleack` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `LID` int NOT NULL,
+  `UID` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `Timestamp` datetime DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `UNQ_ERA` (`LID`,`UID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

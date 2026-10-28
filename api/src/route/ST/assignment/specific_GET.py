@@ -4,6 +4,7 @@ from flask import request, jsonify, g
 
 from function.isLock import isLock
 from function.isAccess import isAccess
+from function.examRule import normalizeRule, isRuleAcknowledged
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -57,7 +58,8 @@ def main():
                     WHEN l.Due <= IFNULL(s.LatestTimestamp, CONVERT_TZ(NOW(), '+00:00', '+07:00')) THEN 1
                     ELSE 0
                 END AS Late, 
-                Exam
+                Exam,
+                l.ExamRule
             FROM lab l
             LEFT JOIN (
                 SELECT LID, MAX(Timestamp) AS LatestTimestamp
@@ -79,7 +81,10 @@ def main():
             "Due": datetime.strptime(str(lab_info_row[3]), "%Y-%m-%d %H:%M:%S").strftime("%d/%m/%Y %H:%M") if lab_info_row[3] else None,
             "Late": bool(int(lab_info_row[4])),
             "Access": isAccess(g.db, cur, public_ip, Email=Email, LID=LID),
-            "Exam": lab_info_row[5]
+            "Exam": lab_info_row[5],
+            # rule text the student must type before check-in, hidden once acknowledged
+            "ExamRule": normalizeRule(lab_info_row[6]) if lab_info_row[5] else "",
+            "RuleAck": isRuleAcknowledged(cur, Email.split('@')[0], LID) if lab_info_row[5] else True
         }
 
 

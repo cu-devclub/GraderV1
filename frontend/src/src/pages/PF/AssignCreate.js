@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Shimmer from '../../components/Shimmer';
 import PinInput from '../../components/pin';
-import { ArrowLeftCircle, X, Paperclip, Plus, ArrowsFullscreen, FileEarmark, Eye, EyeSlash } from 'react-bootstrap-icons';
+import ExamRuleModal from '../../components/ExamRuleModal';
+import { ArrowLeftCircle, X, Paperclip, Plus, ArrowsFullscreen, FileEarmark, Eye, EyeSlash, JournalText } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -40,6 +41,9 @@ function AssignCreate() {
   const [Selected, setSelected] = useState([]);
 
   const [examPin, setExamPin] = useState("");
+  // Rules students must type before check-in (exam mode), saved with the lab
+  const [examRule, setExamRule] = useState("");
+  const [showRuleModal, setShowRuleModal] = useState(false);
 
   // TA access (exam mode), saved together with the lab on create
   const [showTAModal, setShowTAModal] = useState(false);
@@ -359,6 +363,7 @@ function AssignCreate() {
           formData.append('ShowOnLock', showLock);
           formData.append('isExam', isExam);
           formData.append('ExamPin', examPin);
+          formData.append('ExamRule', examRule);
           formData.append('TAAccess', JSON.stringify(taAccess));
 
           formData.append('CSYID', classId);
@@ -420,6 +425,13 @@ function AssignCreate() {
 
   return (
     <div>
+      <ExamRuleModal
+        show={showRuleModal}
+        value={examRule}
+        onSave={(rule) => { setExamRule(rule); setShowRuleModal(false); }}
+        onClose={() => setShowRuleModal(false)}
+        note="Rules are saved when you create the assignment."
+      />
       {showTAModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '2rem', width: '800px', maxWidth: '95%', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -683,6 +695,15 @@ function AssignCreate() {
                       style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                     >
                       <ArrowsFullscreen size={16} /> Show pin fullscreen
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-dark"
+                      onClick={() => setShowRuleModal(true)}
+                      disabled={!isExam}
+                      style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                    >
+                      <JournalText size={16} /> {examRule ? 'Edit exam rules' : 'Set exam rules'}
                     </button>
                     {Cookies.get("role") === "2" && (
                       <button

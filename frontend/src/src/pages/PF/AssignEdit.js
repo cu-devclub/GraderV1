@@ -4,10 +4,11 @@ import withReactContent from 'sweetalert2-react-content';
 import React, { useState, useEffect } from 'react';
 import Navbar from '../../components/Navbar'
 import PinInput from '../../components/pin';
+import ExamRuleModal from '../../components/ExamRuleModal';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Shimmer from '../../components/Shimmer';
-import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash, ArrowLeftCircle, X, Paperclip, ArrowsFullscreen } from 'react-bootstrap-icons';
+import { FileEarmark, Download, Trash, PencilSquare, Plus, Eye, EyeSlash, ArrowLeftCircle, X, Paperclip, ArrowsFullscreen, JournalText } from 'react-bootstrap-icons';
 import toast from 'react-hot-toast';
 
 const host = `${process.env.REACT_APP_HOST}`
@@ -55,6 +56,9 @@ function AssignEdit() {
 
   // exampin
   const [examPin, setExamPin] = useState("");
+  // Rules students must type before check-in (exam mode), saved with the lab
+  const [examRule, setExamRule] = useState("");
+  const [showRuleModal, setShowRuleModal] = useState(false);
 
   const fetchLab = async () => {
     try {
@@ -79,6 +83,7 @@ function AssignEdit() {
         setIsExam(data.data.isExam)
         setIsExamFromServ(data.data.isExam)
         setExamPin(data.data.ExamPin)
+        setExamRule(data.data.ExamRule || "")
         setHasAccess(data.data.hasAccess !== false)
 
         setIsGroup(data.data.IsGroup)
@@ -120,6 +125,7 @@ function AssignEdit() {
           setIsExam(data.data.isExam)
           setIsExamFromServ(data.data.isExam)
           setExamPin(data.data.ExamPin)
+          setExamRule(data.data.ExamRule || "")
           setHasAccess(data.data.hasAccess !== false)
   
           setIsGroup(data.data.IsGroup)
@@ -312,6 +318,7 @@ function AssignEdit() {
           formData.append('ShowOnLock', showLock);
           formData.append('isExam', isExam);
           formData.append('ExamPin', examPin);
+          formData.append('ExamRule', examRule);
 
           formData.append('CSYID', classId);
 
@@ -847,6 +854,13 @@ function AssignEdit() {
 
   return (
     <div>
+      <ExamRuleModal
+        show={showRuleModal}
+        value={examRule}
+        onSave={(rule) => { setExamRule(rule); setShowRuleModal(false); }}
+        onClose={() => setShowRuleModal(false)}
+        note="Rules are saved when you save the assignment."
+      />
       {showTAModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '2rem', width: '800px', maxWidth: '95%', maxHeight: '80vh', overflowY: 'auto' }}>
@@ -1120,6 +1134,15 @@ function AssignEdit() {
                       style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
                     >
                       <ArrowsFullscreen size={16} /> Show pin fullscreen
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-outline-dark"
+                      onClick={() => setShowRuleModal(true)}
+                      disabled={!isExam}
+                      style={{ marginTop: '1rem', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px' }}
+                    >
+                      <JournalText size={16} /> {examRule ? 'Edit exam rules' : 'Set exam rules'}
                     </button>
                     {Cookies.get("role") === "2" && (
                       <button 

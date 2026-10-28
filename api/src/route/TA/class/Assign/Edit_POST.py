@@ -226,11 +226,12 @@ def main():
                 `Lock` = %s,
                 showScoreOnLock = %s,
                 Exam = %s,
+                ExamRule = %s,
                 """ + GCID + """ = %s
             WHERE 
                 LID = %s;
         """
-        cursor.execute(setLab, (form["LabNum"], form["LabName"], form["PubDate"], form["DueDate"], form["DueDate"] if form["LOD"] == 'true' else None, 1 if form["ShowOnLock"] == 'true' else 0, 1 if form["isExam"] == 'true' else 0, str(seleted).replace(" ", ""), form["LID"]))
+        cursor.execute(setLab, (form["LabNum"], form["LabName"], form["PubDate"], form["DueDate"], form["DueDate"] if form["LOD"] == 'true' else None, 1 if form["ShowOnLock"] == 'true' else 0, 1 if form["isExam"] == 'true' else 0, form.get("ExamRule") or None, str(seleted).replace(" ", ""), form["LID"]))
         conn.commit()
 
         LID = form["LID"]
