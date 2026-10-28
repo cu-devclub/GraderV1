@@ -45,17 +45,21 @@ def main():
             SELECT 
                 STD.UID, 
                 USR.Name, 
-                CASE 
-                    WHEN CO.UID IS NOT NULL AND CO.`LID` = LB.`LID` THEN 0 
-                    ELSE 1 
+                CASE
+                    WHEN EXISTS (
+                        SELECT 1
+                        FROM checkout CO
+                        WHERE CO.UID = STD.UID
+                            AND CO.CSYID = STD.CSYID
+                            AND CO.LID = LB.LID
+                    ) THEN 0
+                    ELSE 1
                 END AS checkedOut
-            FROM 
+            FROM
                 student STD
-            JOIN 
+            JOIN
                 user USR ON USR.UID = STD.UID
-            LEFT JOIN 
-                checkout CO ON CO.UID = STD.UID AND CO.CSYID = STD.CSYID
-            JOIN 
+            JOIN
                 lab LB ON LB.CSYID = STD.CSYID
             WHERE 
                 LB.LID = %s
