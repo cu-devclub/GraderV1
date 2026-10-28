@@ -1,4 +1,6 @@
 from flask import request, jsonify
+import pytz
+from datetime import datetime
 
 from function.db import get_db
 from function.isCET import isCET
@@ -40,8 +42,10 @@ def main():
         }), 200
     
     try:
-        sql = "DELETE FROM checkout WHERE LID = %s"
-        cursor.execute(sql, (LID,))
+        # soft delete: keep the check-in records and stamp when they were checked out
+        now = datetime.now(pytz.timezone('Asia/Bangkok'))
+        sql = "UPDATE checkout SET CheckoutTime = %s WHERE LID = %s AND CheckoutTime IS NULL"
+        cursor.execute(sql, (now, LID))
         cursor.execute("DELETE FROM ticket WHERE LID = %s;", (LID,))
         conn.commit()
 

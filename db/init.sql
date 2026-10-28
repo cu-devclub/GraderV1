@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS `checkout` (
   `CSYID` int NOT NULL,
   `ip` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `Timestamp` datetime DEFAULT NULL,
+  `CheckoutTime` datetime DEFAULT NULL,
   PRIMARY KEY (`ID`),
   KEY `UID` (`UID`,`LID`,`CSYID`,`ip`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2702 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

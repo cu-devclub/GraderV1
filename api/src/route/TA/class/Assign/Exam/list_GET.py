@@ -57,7 +57,7 @@ def main():
                 user USR ON USR.UID = STD.UID
             JOIN
                 lab LB ON LB.CSYID = STD.CSYID
-            -- latest check-in of this lab only, so each student appears once
+            -- latest active (not checked out) check-in of this lab only, so each student appears once
             LEFT JOIN
                 checkout CO ON CO.ID = (
                     SELECT MAX(C2.ID)
@@ -65,6 +65,7 @@ def main():
                     WHERE C2.UID = STD.UID
                         AND C2.CSYID = STD.CSYID
                         AND C2.LID = LB.LID
+                        AND C2.CheckoutTime IS NULL
                 )
             WHERE
                 LB.LID = %s
