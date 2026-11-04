@@ -45,25 +45,38 @@ def main():
             SELECT 
                 STD.UID, 
                 USR.Name, 
-                CASE 
-                    WHEN CO.UID IS NOT NULL AND CO.`LID` = LB.`LID` THEN 0 
-                    ELSE 1 
-                END AS checkedOut
-            FROM 
+                CASE
+                    WHEN CO.ID IS NOT NULL AND CO.CheckoutTime IS NULL THEN 0
+                    ELSE 1
+                END AS checkedOut,
+                CO.ip AS IP,
+                CO.Timestamp AS CheckinTime,
+                CO.CheckoutTime AS CheckoutTime
+            FROM
                 student STD
-            JOIN 
+            JOIN
                 user USR ON USR.UID = STD.UID
-            LEFT JOIN 
-                checkout CO ON CO.UID = STD.UID AND CO.CSYID = STD.CSYID
-            JOIN 
+            JOIN
                 lab LB ON LB.CSYID = STD.CSYID
-            WHERE 
+            -- latest check-in record of this lab only (checked out or not), so each student appears once
+            LEFT JOIN
+                checkout CO ON CO.ID = (
+                    SELECT MAX(C2.ID)
+                    FROM checkout C2
+                    WHERE C2.UID = STD.UID
+                        AND C2.CSYID = STD.CSYID
+                        AND C2.LID = LB.LID
+                )
+            WHERE
                 LB.LID = %s
-                AND (JSON_CONTAINS(LB.CID, CAST(STD.CID AS JSON)) 
+                AND (JSON_CONTAINS(LB.CID, CAST(STD.CID AS JSON))
                     OR JSON_CONTAINS(LB.GID, CAST(STD.GID AS JSON)));
             """
         cursordict.execute(query, (LID,))
         STDL = cursordict.fetchall()
+        for row in STDL:
+            for key in ('CheckinTime', 'CheckoutTime'):
+                row[key] = row[key].strftime('%d/%m/%Y %H:%M:%S') if row[key] else None
         return jsonify({
             'success': True,
             'msg': '',

@@ -1,3 +1,6 @@
+import pytz
+from datetime import datetime
+
 def checkin(conn, cursor, CSYID, UID, LID) -> str:
     try:
         query = """ 
@@ -35,8 +38,10 @@ def checkin(conn, cursor, CSYID, UID, LID) -> str:
             cursor.execute(query)
             conn.commit()
 
-        query = "DELETE FROM `checkout` WHERE UID = %s AND LID = %s AND CSYID = %s;"
-        cursor.execute(query, (UID, LID, CSYID))
+        # soft delete: keep the check-in record and stamp when the student checked out
+        now = datetime.now(pytz.timezone('Asia/Bangkok'))
+        query = "UPDATE `checkout` SET `CheckoutTime` = %s WHERE UID = %s AND LID = %s AND CSYID = %s AND `CheckoutTime` IS NULL;"
+        cursor.execute(query, (now, UID, LID, CSYID))
         conn.commit()
 
     except Exception as e:

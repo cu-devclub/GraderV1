@@ -54,7 +54,7 @@ def isAccess(con, cur, ip, UID=None, Email:str=None, LID=None, QID=None, FID=Non
                 WHEN EXISTS (
                     SELECT 1
                     FROM checkout
-                    WHERE UID = %s AND LID = %s AND ip = %s
+                    WHERE UID = %s AND LID = %s AND ip = %s AND CheckoutTime IS NULL
                 ) 
                 THEN 0
                 ELSE 1 

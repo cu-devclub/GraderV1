@@ -76,7 +76,7 @@ function QRScan() {
         }
     }
 
-    const rqchkio = async (data) => {
+    const rqchkio = async (data, switchDevice = false) => {
         try{
             const response = await fetch(`${host}/TA/class/Assign/Exam/check${data.Type === 0 ? "out":"in"}`, {
                 method: 'POST',
@@ -86,13 +86,27 @@ function QRScan() {
                     "Access-Control-Allow-Origin": "*",
                     "X-CSRF-TOKEN": Cookies.get("csrf_token")
                 },
-                body: JSON.stringify({ LID: data.LID, UID: data.UID, CSYID: classId })
+                body: JSON.stringify({ LID: data.LID, UID: data.UID, CSYID: classId, SwitchDevice: switchDevice })
             })
             const Data = await response.json()
             if (Data.success){
                 withReactContent(Swal).fire({
                     title: "Complete!",
                     icon: "success"
+                })
+            }else if (Data.code === "OTHER_DEVICE" && !switchDevice){
+                withReactContent(Swal).fire({
+                    title: Data.msg,
+                    text: "Switching will check out the old device and check in this one.",
+                    icon: Data.data,
+                    showDenyButton: true,
+                    confirmButtonText: "OK",
+                    denyButtonText: "Switch to this device",
+                    denyButtonColor: "#e25595",
+                }).then(res => {
+                    if(res.isDenied){
+                        rqchkio(data, true)
+                    }
                 })
             }else{
                 withReactContent(Swal).fire({
