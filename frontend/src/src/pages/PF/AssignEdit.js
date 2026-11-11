@@ -212,6 +212,31 @@ function AssignEdit() {
     }
   }
 
+  // Saves the rules immediately, so they don't depend on saving the whole assignment
+  const handleSaveRule = async (rule) => {
+    try {
+      const response = await fetch(`${host}/TA/class/Assign/examrule`, {
+        method: 'POST',
+        credentials: "include",
+        headers: {
+            "Content-type": "application/json; charset=UTF-8",
+            "X-CSRF-TOKEN": Cookies.get("csrf_token")
+        },
+        body: JSON.stringify({ LID: LID, ExamRule: rule }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setExamRule(rule);
+        setShowRuleModal(false);
+        toast.success(data.msg);
+      } else {
+        toast.error(data.msg);
+      }
+    } catch (error) {
+      toast.error('Failed to connect to server.');
+    }
+  }
+
   const handlePublishDateChange = (e) => {
     setPublishDate(e.target.value)
   }
@@ -857,9 +882,8 @@ function AssignEdit() {
       <ExamRuleModal
         show={showRuleModal}
         value={examRule}
-        onSave={(rule) => { setExamRule(rule); setShowRuleModal(false); }}
+        onSave={handleSaveRule}
         onClose={() => setShowRuleModal(false)}
-        note="Rules are saved when you save the assignment."
       />
       {showTAModal && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1050, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

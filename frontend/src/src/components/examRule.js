@@ -1,147 +1,107 @@
 import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content';
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 
-// Rule lines as students see them; each line break is typed as a single space
-export const ruleLines = (text) => (text || '')
-  .split('\n')
-  .map((line) => line.trim().replace(/\s+/g, ' '))
-  .filter((line) => line !== '');
-
-const COLOR_PENDING = '#94a3b8';
-const COLOR_CORRECT = '#1e293b';
-const COLOR_WRONG = '#dc2626';
-
-// Fills `box` with one span per character of the rule and returns the spans in typing order
-export const renderRuleText = (box, lines) => {
-  box.innerHTML = '';
-  const spans = [];
-  lines.forEach((line, li) => {
-    const lineEl = document.createElement('div');
-    for (const ch of line) {
-      const span = document.createElement('span');
-      span.textContent = ch;
-      span.style.color = COLOR_PENDING;
-      lineEl.appendChild(span);
-      spans.push(span);
-    }
-    if (li < lines.length - 1) {
-      // line break, typed as a space
-      const span = document.createElement('span');
-      span.textContent = ' ';
-      lineEl.appendChild(span);
-      spans.push(span);
-    }
-    box.appendChild(lineEl);
-  });
-  return spans;
-};
-
-export const ruleBoxStyle = {
-  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-  fontSize: '1.05rem',
-  lineHeight: '1.9',
+const boxStyle = {
   textAlign: 'left',
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
   border: '1px solid #cbd5e1',
   borderRadius: '12px',
-  padding: '1.25rem 1.5rem',
+  padding: '1rem 1.25rem',
   backgroundColor: '#f8fafc',
-  maxHeight: '50vh',
+  color: '#1e293b',
+  fontSize: '1rem',
   overflowY: 'auto',
+  wordBreak: 'break-word',
 };
 
-const cssText = (style) => Object.entries(style)
-  .map(([k, v]) => `${k.replace(/[A-Z]/g, (m) => '-' + m.toLowerCase())}:${v}`)
-  .join(';');
+// Exam rules rendered from markdown (raw HTML in the text is not rendered)
+export function RuleMarkdown({ text, style }) {
+  return (
+    <div style={{ ...boxStyle, ...style }}>
+      <ReactMarkdown>{text}</ReactMarkdown>
+    </div>
+  );
+}
 
-// Dialog that cannot be closed until the student types the rule exactly and submits.
-// submit(text) must resolve to { success, msg }; the returned promise resolves after a successful submit.
-export const showExamRuleTyping = (rule, submit) => new Promise((resolve) => {
-  const lines = ruleLines(rule);
-  const target = lines.join(' ');
+// Same rule as the server: case-insensitive, repeated spaces count as one
+const normalizeName = (name) => (name || '').trim().replace(/\s+/g, ' ').toLowerCase();
 
-  Swal.fire({
+function RuleAckForm({ rule, name, submit, onDone }) {
+  const [checked, setChecked] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [wrong, setWrong] = useState(false);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const expected = normalizeName(name);
+  const nameMatch = typed.toLowerCase() === expected;
+
+  const handleType = (e) => {
+    const value = e.target.value;
+    // only accept input that still matches the start of the name
+    if (expected.startsWith(value.toLowerCase())) {
+      setTyped(value);
+      setError('');
+    } else {
+      setWrong(true);
+      setTimeout(() => setWrong(false), 400);
+    }
+  };
+
+  const handleSubmit = async () => {
+    setBusy(true);
+    let result;
+    try {
+      result = await submit(typed);
+    } catch (e) {
+      result = { success: false, msg: 'Failed to connect to server.' };
+    }
+    if (result && result.success) {
+      onDone();
+      return;
+    }
+    setBusy(false);
+    setError((result && result.msg) || 'Please try again.');
+  };
+
+  return (
+    <div style={{ textAlign: 'left' }}>
+      <RuleMarkdown text={rule} style={{ maxHeight: '45vh' }} />
+      <label style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', marginTop: '1rem', cursor: 'pointer', color: '#334155' }}>
+        <input type="checkbox" className="form-check-input" checked={checked} onChange={(e) => setChecked(e.target.checked)} style={{ marginTop: '4px', flexShrink: 0 }} />
+        I have read and understood the exam rules, and I will follow them.
+      </label>
+      <div style={{ marginTop: '1rem', color: '#334155' }}>Type your full name to confirm</div>
+      <input
+        type="text"
+        className={`form-control mt-2 ${wrong ? 'is-invalid' : ''}`}
+        value={typed}
+        onChange={handleType}
+        onPaste={(e) => e.preventDefault()}
+        onDrop={(e) => e.preventDefault()}
+        autoComplete="off"
+        spellCheck="false"
+      />
+      {error && <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '0.9rem' }}>{error}</div>}
+      <button type="button" className="btn btn-primary w-100 py-2 mt-3" disabled={!checked || !nameMatch || busy} onClick={handleSubmit}>
+        {busy && <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />}
+        {busy ? 'Submitting...' : 'Submit'}
+      </button>
+    </div>
+  );
+}
+
+// Dialog that cannot be closed until the student ticks the box, types their name and submits.
+// submit(name) must resolve to { success, msg }; the returned promise resolves after a successful submit.
+export const showExamRuleAck = (rule, name, submit) => new Promise((resolve) => {
+  withReactContent(Swal).fire({
     title: 'Exam rules',
-    html: `
-      <div style="text-align:left;color:#475569;margin-bottom:12px;">
-        Type the rules below exactly as shown to confirm you have read and will follow them.
-      </div>
-      <div style="position:relative;">
-        <div id="swal-rule-text" style="${cssText({ ...ruleBoxStyle, cursor: 'text' })}"></div>
-        <textarea id="swal-rule-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;resize:none;border:none;cursor:text;"></textarea>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:0.9rem;">
-        <span id="swal-rule-error" style="color:${COLOR_WRONG};"></span>
-        <span id="swal-rule-progress" style="color:#64748b;">0 / ${target.length}</span>
-      </div>
-      <button type="button" id="swal-rule-submit" class="btn btn-primary w-100 py-2 mt-3" disabled>Submit</button>
-    `,
+    html: <RuleAckForm rule={rule} name={name} submit={submit} onDone={() => { Swal.close(); resolve(); }} />,
     width: '800px',
     allowOutsideClick: false,
     allowEscapeKey: false,
     showCloseButton: false,
     showConfirmButton: false,
     showCancelButton: false,
-    didOpen: () => {
-      const box = document.getElementById('swal-rule-text');
-      const input = document.getElementById('swal-rule-input');
-      const progress = document.getElementById('swal-rule-progress');
-      const error = document.getElementById('swal-rule-error');
-      const submitBtn = document.getElementById('swal-rule-submit');
-      const spans = renderRuleText(box, lines);
-      input.maxLength = target.length;
-
-      const paint = () => {
-        // Enter counts as the space at a line break
-        if (input.value.includes('\n')) input.value = input.value.replace(/\n/g, ' ');
-        const typed = input.value;
-        spans.forEach((span, i) => {
-          span.style.borderLeft = i === typed.length ? `2px solid ${COLOR_CORRECT}` : '';
-          span.style.backgroundColor = '';
-          if (i >= typed.length) {
-            span.style.color = COLOR_PENDING;
-          } else if (typed[i] === target[i]) {
-            span.style.color = COLOR_CORRECT;
-          } else {
-            span.style.color = COLOR_WRONG;
-            span.style.backgroundColor = '#fee2e2';
-          }
-        });
-        spans[Math.min(typed.length, spans.length - 1)]?.scrollIntoView({ block: 'nearest' });
-        progress.textContent = `${typed.length} / ${target.length}`;
-        error.textContent = '';
-        submitBtn.disabled = typed !== target;
-      };
-
-      input.addEventListener('input', paint);
-      // typing it is the point, so no pasting or dropping text
-      input.addEventListener('paste', (e) => e.preventDefault());
-      input.addEventListener('drop', (e) => e.preventDefault());
-      paint();
-      setTimeout(() => input.focus(), 100);
-
-      submitBtn.onclick = async () => {
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = `
-          <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" style="width: 16px; height: 16px; border-width: 2px;"></span>
-          Submitting...
-        `;
-        let result;
-        try {
-          result = await submit(input.value);
-        } catch (e) {
-          result = { success: false, msg: 'Failed to connect to server.' };
-        }
-        if (result && result.success) {
-          Swal.close();
-          resolve();
-          return;
-        }
-        submitBtn.textContent = 'Submit';
-        submitBtn.disabled = input.value !== target;
-        error.textContent = (result && result.msg) || 'Please try again.';
-      };
-    },
   });
 });

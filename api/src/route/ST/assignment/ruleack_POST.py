@@ -4,7 +4,7 @@ from datetime import datetime
 from flask import request, jsonify
 
 from function.db import get_db
-from function.examRule import normalizeRule
+from function.examRule import ruleHash, normalizeName
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -15,7 +15,9 @@ def main():
 
     data = request.get_json()
     LID = data.get('LID')
-    Text = data.get('Text')
+    Ack = data.get('Ack') is True
+    Name = data.get('Name')
+    RuleHash = data.get('RuleHash')
 
     conn = get_db()
     cur = conn.cursor()
@@ -31,8 +33,7 @@ def main():
             }), 200
 
         isExam, exam_rule, lab_cids, lab_gids, CSYID = lab_row
-        rule = normalizeRule(exam_rule)
-        if not isExam or not rule:
+        if not isExam or not (exam_rule or "").strip():
             return jsonify({
                 'success': False,
                 'msg': 'This lab has no exam rule to acknowledge.',
@@ -62,17 +63,38 @@ def main():
                 'data': ""
             }), 200
 
-        if normalizeRule(Text) != rule:
+        # the student must acknowledge the version they were shown
+        current_hash = ruleHash(exam_rule)
+        if RuleHash != current_hash:
             return jsonify({
                 'success': False,
-                'msg': 'The typed text does not match the exam rules.',
+                'msg': 'The exam rules were updated. Please reload the page and read them again.',
+                'data': ""
+            }), 200
+
+        if not Ack:
+            return jsonify({
+                'success': False,
+                'msg': 'Please tick the box to acknowledge the exam rules.',
+                'data': ""
+            }), 200
+
+        cur.execute("SELECT Name FROM user WHERE Email = %s", (Email,))
+        user_row = cur.fetchone()
+        if not user_row or normalizeName(Name) != normalizeName(user_row[0]):
+            return jsonify({
+                'success': False,
+                'msg': 'The typed name does not match your name.',
                 'data': ""
             }), 200
 
         now = datetime.now(pytz.timezone('Asia/Bangkok'))
         cur.execute(
-            "INSERT IGNORE INTO examruleack (LID, UID, `Timestamp`) VALUES (%s, %s, %s)",
-            (LID, UID, now)
+            """
+                INSERT INTO examruleack (LID, UID, RuleHash, `Timestamp`) VALUES (%s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE RuleHash = VALUES(RuleHash), `Timestamp` = VALUES(`Timestamp`)
+            """,
+            (LID, UID, current_hash, now)
         )
         conn.commit()
 

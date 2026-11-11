@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { CodeSlash, FileEarmark, Download } from 'react-bootstrap-icons';
 import Shimmer from '../../components/Shimmer';
-import { showExamRuleTyping } from '../../components/examRule';
+import { showExamRuleAck } from '../../components/examRule';
 // import PinInput from '../../components/pin';
 
 const host = `${process.env.REACT_APP_HOST}`;
@@ -67,7 +67,7 @@ function Lab() {
         }
       });
       const data = await response.json();
-      setLabInfo(data.data)
+      if (data.success) setLabInfo(data.data); else console.error(data.msg);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
@@ -86,7 +86,7 @@ function Lab() {
           }
         });
         const data = await response.json();
-        setLabInfo(data.data)
+        if (data.success) setLabInfo(data.data); else console.error(data.msg);
       } catch (error) {
         console.error('Error fetching data:', error);
       }
@@ -198,7 +198,7 @@ function Lab() {
     if (LabInfo && !LabInfo.Info.Access && LabInfo.Info.Exam && !LabInfo.Info.Lock) {
       // exam rules come before check-in; once acknowledged this effect runs again and shows check-in
       if (LabInfo.Info.ExamRule && !LabInfo.Info.RuleAck) {
-        showExamRuleTyping(LabInfo.Info.ExamRule, async (text) => {
+        showExamRuleAck(LabInfo.Info.ExamRule, LabInfo.Info.StudentName, async (name) => {
           const response = await fetch(`${host}/ST/assignment/ruleack`, {
             method: 'POST',
             credentials: "include",
@@ -207,7 +207,7 @@ function Lab() {
               "Access-Control-Allow-Origin": "*",
               "X-CSRF-TOKEN": Cookies.get("csrf_token")
             },
-            body: JSON.stringify({ LID: LID, Text: text })
+            body: JSON.stringify({ LID: LID, Ack: true, Name: name, RuleHash: LabInfo.Info.RuleHash })
           });
           return response.json();
         }).then(() => {
