@@ -186,6 +186,7 @@ CREATE TABLE IF NOT EXISTS `examruleack` (
   `ID` int NOT NULL AUTO_INCREMENT,
   `LID` int NOT NULL,
   `UID` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `RuleHash` char(64) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `Timestamp` datetime DEFAULT NULL,
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNQ_ERA` (`LID`,`UID`)

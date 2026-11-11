@@ -4,7 +4,7 @@ from flask import request, jsonify, g
 
 from function.isLock import isLock
 from function.isAccess import isAccess
-from function.examRule import normalizeRule, isRuleAcknowledged
+from function.examRule import ruleHash, isRuleAcknowledged
 
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -82,10 +82,15 @@ def main():
             "Late": bool(int(lab_info_row[4])),
             "Access": isAccess(g.db, cur, public_ip, Email=Email, LID=LID),
             "Exam": lab_info_row[5],
-            # rule text the student must type before check-in, hidden once acknowledged
-            "ExamRule": normalizeRule(lab_info_row[6]) if lab_info_row[5] else "",
             "RuleAck": isRuleAcknowledged(cur, Email.split('@')[0], LID) if lab_info_row[5] else True
         }
+        # rules (markdown) to acknowledge before check-in, plus the name the student must type
+        if not lab_info["RuleAck"]:
+            cur.execute("SELECT Name FROM user WHERE Email = %s", (Email,))
+            name_row = cur.fetchone()
+            lab_info["ExamRule"] = lab_info_row[6].strip()
+            lab_info["RuleHash"] = ruleHash(lab_info_row[6])
+            lab_info["StudentName"] = name_row[0] if name_row else ""
 
 
         # Fetch questions and submission information
