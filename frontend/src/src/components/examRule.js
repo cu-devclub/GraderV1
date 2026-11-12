@@ -31,24 +31,28 @@ function RuleAckForm({ rule, name, submit, onDone }) {
   const [checked, setChecked] = useState(false);
   const [typed, setTyped] = useState('');
   const [wrong, setWrong] = useState(false);
+  const [shake, setShake] = useState(0);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const expected = normalizeName(name);
-  const nameMatch = typed.toLowerCase() === expected;
 
   const handleType = (e) => {
-    const value = e.target.value;
-    // only accept input that still matches the start of the name
-    if (expected.startsWith(value.toLowerCase())) {
-      setTyped(value);
-      setError('');
-    } else {
-      setWrong(true);
-      setTimeout(() => setWrong(false), 400);
-    }
+    setTyped(e.target.value);
+    setWrong(false);
+    setError('');
+  };
+
+  // red border + shake, kept until the student edits the name
+  const reject = (msg) => {
+    setWrong(true);
+    setShake((n) => n + 1);
+    setError(msg);
   };
 
   const handleSubmit = async () => {
+    if (normalizeName(typed) !== normalizeName(name)) {
+      reject('The name does not match. Please check it and try again.');
+      return;
+    }
     setBusy(true);
     let result;
     try {
@@ -61,7 +65,7 @@ function RuleAckForm({ rule, name, submit, onDone }) {
       return;
     }
     setBusy(false);
-    setError((result && result.msg) || 'Please try again.');
+    reject((result && result.msg) || 'Please try again.');
   };
 
   return (
@@ -72,9 +76,13 @@ function RuleAckForm({ rule, name, submit, onDone }) {
         I have read and understood the exam rules, and I will follow them.
       </label>
       <div style={{ marginTop: '1rem', color: '#334155' }}>Type your full name to confirm</div>
+      <style>{'@keyframes rule-name-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}'}</style>
       <input
+        key={shake}
         type="text"
         className={`form-control mt-2 ${wrong ? 'is-invalid' : ''}`}
+        style={shake ? { animation: 'rule-name-shake 0.4s' } : undefined}
+        autoFocus={shake > 0}
         value={typed}
         onChange={handleType}
         onPaste={(e) => e.preventDefault()}
@@ -83,7 +91,7 @@ function RuleAckForm({ rule, name, submit, onDone }) {
         spellCheck="false"
       />
       {error && <div style={{ color: '#dc2626', marginTop: '8px', fontSize: '0.9rem' }}>{error}</div>}
-      <button type="button" className="btn btn-primary w-100 py-2 mt-3" disabled={!checked || !nameMatch || busy} onClick={handleSubmit}>
+      <button type="button" className="btn btn-primary w-100 py-2 mt-3" disabled={!checked || !typed.trim() || busy} onClick={handleSubmit}>
         {busy && <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true" />}
         {busy ? 'Submitting...' : 'Submit'}
       </button>

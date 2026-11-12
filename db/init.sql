@@ -163,7 +163,7 @@ CREATE TABLE IF NOT EXISTS `ticket` (
   `Type` tinyint NOT NULL,
   `ip` varchar(30) COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `UNQ_TKT` (`UID`,`LID`,`CSYID`,`Type`)
+  UNIQUE KEY `UNQ_TKT` (`UID`,`LID`,`CSYID`,`Type`,`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `user` (
