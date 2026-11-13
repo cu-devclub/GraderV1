@@ -75,7 +75,7 @@ function RuleAckForm({ rule, name, submit, onDone }) {
         <input type="checkbox" className="form-check-input" checked={checked} onChange={(e) => setChecked(e.target.checked)} style={{ marginTop: '4px', flexShrink: 0 }} />
         I have read and understood the exam rules, and I will follow them.
       </label>
-      <div style={{ marginTop: '1rem', color: '#334155' }}>Type your full name to confirm</div>
+      <div style={{ marginTop: '1rem', color: '#334155' }}>Type your full name in English to confirm</div>
       <style>{'@keyframes rule-name-shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}'}</style>
       <input
         key={shake}
